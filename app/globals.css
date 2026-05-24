@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #00a79d;
+  --color-primary-light: #f0fdfa;
+}
+
+@source "../components";
+@source "../app";
+
+body {
+  /* نستخدم كايرو للعربي و Plus Jakarta للأرقام */
+  font-family: 'Cairo', 'Plus Jakarta Sans', sans-serif !important;
+  background-color: #f8fafc;
+  direction: rtl;
+}
+
+/* إعدادات أيقونات جوجل - انسخيها بدقة */
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded' !important;
+  display: inline-block;
+  vertical-align: middle;
+  direction: ltr; /* الأيقونة دائماً لليسار برمجياً */
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  
+  /* السطرين الجايين هم أهم شي لتحويل النصوص لأيقونات */
+  font-feature-settings: 'liga'; 
+  -webkit-font-smoothing: antialiased;
+}
