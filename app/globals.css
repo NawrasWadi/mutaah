@@ -1,26 +1,35 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-primary: #00a79d;
+  --color-primary-light: #f0fdfa;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+@source "../components";
+@source "../app";
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* نستخدم كايرو للعربي و Plus Jakarta للأرقام */
+  font-family: 'Cairo', 'Plus Jakarta Sans', sans-serif !important;
+  background-color: #f8fafc;
+  direction: rtl;
+}
+
+/* إعدادات أيقونات جوجل - انسخيها بدقة */
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded' !important;
+  display: inline-block;
+  vertical-align: middle;
+  direction: ltr; /* الأيقونة دائماً لليسار برمجياً */
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  
+  /* السطرين الجايين هم أهم شي لتحويل النصوص لأيقونات */
+  font-feature-settings: 'liga'; 
+  -webkit-font-smoothing: antialiased;
 }
