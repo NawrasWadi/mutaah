@@ -1,46 +1,60 @@
+// [DESIGN/STRUCTURE] - كارد مضغوط (Compact مستوى -2)
 export default function ProductCard({ name, loc, price, unit, icon, status }: any) {
+  const isAvailable = status === "متاح";
+
   return (
-    /* الكارد مع تأثير الـ Hover */
-    <div className="group bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden flex flex-col w-full transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-pointer">
+    <div className="group bg-white rounded-[20px] border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col h-full cursor-pointer overflow-hidden">
       
-      {/* الجزء العلوي: الأيقونة والحالة */}
-      <div className="h-52 bg-[#f1f7f7] flex items-center justify-center relative m-2 rounded-[28px] overflow-hidden">
-        <span className="material-symbols-rounded text-[80px] text-gray-300 font-light transition-transform duration-500 group-hover:scale-110">
+      {/* 1. منطقة الصورة - ارتفاع h-40 بدلاً من h-48 */}
+      <div className="h-40 bg-[#f8fafb] m-1.5 rounded-[16px] flex items-center justify-center relative shrink-0">
+        <span className="material-symbols-rounded text-6xl text-gray-200 group-hover:scale-105 transition-transform duration-500 font-light italic">
           {icon}
         </span>
         
-        <div className="absolute top-4 right-4">
-          <span className="bg-[#e7f6f2] text-[#00a79d] px-4 py-1.5 rounded-full text-[12px] font-bold border border-[#d1ede6]">
+        {/* شارة الحالة - أصغر */}
+        <div className="absolute top-2 right-2">
+          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${
+            isAvailable ? 'bg-white/90 text-primary border-primary/10' : 'bg-orange-50 text-orange-500 border-orange-100'
+          }`}>
             {status}
           </span>
         </div>
       </div>
 
-      {/* الجزء السفلي: البيانات - محاذاة يمين تامة */}
-      <div className="p-6 pt-2 flex flex-col items-start text-right">
+      {/* 2. منطقة البيانات - تقليل الـ Padding والخطوط */}
+      <div className="px-4 py-3 flex flex-col grow text-right">
         
-        {/* اسم المنتج */}
-        <h3 className="font-bold text-gray-800 text-[20px] mb-1">
+        {/* الاسم - نص أصغر text-[14px] */}
+        <h3 className="font-bold text-gray-800 text-[14px] mb-1 leading-tight line-clamp-1">
           {name}
         </h3>
         
-        {/* الموقع - أيقونة ثم نص (تبدأ من اليمين) */}
-        <div className="flex items-center gap-1 text-gray-400 text-[13px] mb-4">
-          <span className="material-symbols-rounded text-[18px] text-[#00a79d]">location_on</span>
-          <span>{loc}</span>
+        <div className="flex flex-col gap-0 mb-4">
+          {/* الموقع */}
+          <div className="flex items-center gap-1 text-gray-400 text-[10px]">
+            <span className="material-symbols-rounded text-[13px] text-primary/60">location_on</span>
+            <span>{loc}</span>
+          </div>
+
+          {/* السعر - حجم text-[18px] */}
+          <div className="flex items-center gap-1 font-bold text-primary leading-none mt-0.5">
+             <span className="text-[18px] tracking-tight">{price}</span>
+             <span className="text-[16px]">₪</span>
+             <span className="text-gray-400 text-[10px] font-medium mr-1">/ {unit}</span>
+          </div>
         </div>
 
-        {/* السعر - عملة ثم رقم ثم وحدة (تبدأ من اليمين) */}
-        <div className="flex items-center gap-1 mb-6 font-bold text-[#00a79d]">
-           <span className="text-[24px]">₪</span>
-           <span className="text-[24px]">{price}</span>
-           <span className="text-gray-400 text-[14px] font-medium mr-1">/ {unit}</span>
+        {/* 3. الزر - ارتفاع py-2.5 بدلاً من py-3.5 */}
+        <div className="mt-auto">
+          <button className={`w-full py-2.5 rounded-xl font-bold text-[13px] transition-all duration-300 ${
+            isAvailable 
+            ? 'bg-gradient-to-r from-primary to-[#43a047] text-white shadow-sm' 
+            : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+          }`}>
+            {isAvailable ? 'تأجر الآن' : 'غير متاح'}
+          </button>
         </div>
 
-        {/* الزر */}
-        <button className="w-full py-4 rounded-[22px] bg-gradient-to-r from-[#00a79d] to-[#43a047] text-white font-bold text-[18px] shadow-lg shadow-[#00a79d]/20 active:scale-95 transition-all">
-          تأجر الآن
-        </button>
       </div>
     </div>
   );
