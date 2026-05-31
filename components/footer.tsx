@@ -10,7 +10,7 @@ export default function Footer() {
         <div className="w-full md:w-80 space-y-4">
           <div className="text-primary text-3xl font-black italic tracking-tighter">مُتاح</div>
           <p className="text-gray-100 text-[14px] leading-relaxed">
-           منصة تأجير الأغراض الأولى في غزة<br />
+           منصة تأجير الأغراض الأولى في فلسطين<br />
             <span className="text-gray-400 font-medium italic">لا تشتري — شارك واستفيد</span>
           </p>
         </div>

@@ -6,8 +6,36 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false); // حالة فتح المودال
-  const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState<{ identifier: string; password: string }>({
+  identifier: "",
+  password: ""
+}); 
+  const [errors, setErrors] = useState<Record<string, string>>({});  const router = useRouter();
+  const validate = () => {
+  const newErrors: Record<string, string> = {};
+     // 2. دالة الفاليديشن هون ✅
+  if (!formData.identifier.trim()) {
+    newErrors.identifier = "اسم المستخدم مطلوب";
+  } else if (
+    formData.identifier.includes("@") && 
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.identifier)
+  ) {
+    newErrors.identifier = "صيغة البريد الإلكتروني غير صحيحة";
+  } else if (
+    !formData.identifier.includes("@") && 
+    !/^[a-zA-Z0-9_]+$/.test(formData.identifier)
+  ) {
+   newErrors.identifier = "اسم المستخدم: حروف وأرقام و _ فقط، بدون مسافات";  }
+
+  if (!formData.password)
+    newErrors.password = "كلمة السر مطلوبة";
+  else if (formData.password.length < 6)
+    newErrors.password = "كلمة السر يجب أن تكون 6 أحرف على الأقل";
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
   return (
     // [DESIGN/STRUCTURE] - خلفية ناعمة
     <div className="min-h-screen flex items-center justify-center bg-[#f0f9f7] p-4">
@@ -51,11 +79,16 @@ export default function LoginPage() {
               person
             </span>
             <input 
+            value={formData.identifier}
+            onChange={(e) => setFormData({...formData, identifier: e.target.value})}
               type="text"
               placeholder="اسم المستخدم أو البريد الالكتروني"
               className="w-full pr-11 pl-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[12px] outline-none focus:bg-white focus:border-primary transition-all"
             />
           </div>
+          {errors.identifier && (
+          <p className="text-red-500 text-[10px] mt-1 text-right">{errors.identifier}</p>
+           )}
 
           {/* حقل كلمة السر */}
           <div className="relative group">
@@ -63,9 +96,12 @@ export default function LoginPage() {
               lock
             </span>
             <input 
+            value={formData.password}
+            onChange={(e) => setFormData({...formData, password: e.target.value})}
               type={showPassword ? "text" : "password"}
               placeholder="كلمة السر"
               className="w-full pr-11 pl-11 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[12px] outline-none focus:bg-white focus:border-primary transition-all"
+            
             />
             <button 
               type="button"
@@ -77,6 +113,10 @@ export default function LoginPage() {
               </span>
             </button>
           </div>
+          {/* رسالة الخطأ هون ✅ */}
+             {errors.password && (
+              <p className="text-red-500 text-[10px] mt-1 text-right">{errors.password}</p>
+             )}
 
           {/* نسيت كلمة السر */}
           <div className="text-right">
@@ -89,8 +129,7 @@ export default function LoginPage() {
 
           {/* زر الدخول - تم تصغير الارتفاع والخط */}
           <button    type="button"
-            onClick={() => router.push("/dashboard")} // الانتقال للداشبورد
-           className="w-full py-3 mt-1 rounded-[16px] bg-gradient-to-r from-primary to-[#43a047] text-white font-bold text-[14px] shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all">
+          onClick={() => { if (validate()) router.push("/dashboard"); }}           className="w-full py-3 mt-1 rounded-[16px] bg-gradient-to-r from-primary to-[#43a047] text-white font-bold text-[14px] shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all">
             تسجيل الدخول
           </button>
         </form>
