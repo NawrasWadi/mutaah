@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import ProductCard from "../../components/ProductCard";
 import Footer from "../../components/footer";
 import UserDropdown from "../../components/UserDropdown";
@@ -18,6 +20,7 @@ export default function Dashboard() {
     { name: "طابعة ليزر HP", loc: "غزة — النصر", price: "12", unit: "يوم", icon: "print", status: "متاح", color: "success" },
     { name: "ميكروسكوب ديجيتال", loc: "غزة — الشجاعية", price: "20", unit: "يوم", icon: "science", status: "متاح", color: "success" },
   ];
+ const [currentPage, setCurrentPage] = useState(1);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -78,7 +81,6 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-
         {/* شبكة المنتجات - نضعها داخل حاوية بمسافة جانبية متناسقة */}
         <div className="px-6 pb-20">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -87,8 +89,8 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+        
       </main>
-
       <Footer />
     </div>
   );
