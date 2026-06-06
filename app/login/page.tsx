@@ -3,54 +3,37 @@ import { useState } from "react";
 import Link from "next/link";
 import ForgotPasswordModal from "../../components/ForgotPasswordModal"; // استيراد المودال
 import { useRouter } from "next/navigation";
-
+import { validateLogin } from "@/validations/auth.validation";
+import { LoginErrors, LoginFormData } from "@/types/auth";
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState<{ identifier: string; password: string }>({
-  identifier: "",
-  password: ""
-}); 
-  const [errors, setErrors] = useState<Record<string, string>>({});  const router = useRouter();
-  const validate = () => {
-  const newErrors: Record<string, string> = {};
-     // 2. دالة الفاليديشن هون ✅
-  if (!formData.identifier.trim()) {
-    newErrors.identifier = "اسم المستخدم مطلوب";
-  } else if (
-    formData.identifier.includes("@") && 
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.identifier)
-  ) {
-    newErrors.identifier = "صيغة البريد الإلكتروني غير صحيحة";
-  } else if (
-    !formData.identifier.includes("@") && 
-    !/^[a-zA-Z0-9_]+$/.test(formData.identifier)
-  ) {
-   newErrors.identifier = "اسم المستخدم: حروف وأرقام و _ فقط، بدون مسافات";  }
-
-  if (!formData.password)
-    newErrors.password = "كلمة السر مطلوبة";
-  else if (formData.password.length < 6)
-    newErrors.password = "كلمة السر يجب أن تكون 6 أحرف على الأقل";
-
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
+  const [formData, setFormData] =
+  useState<LoginFormData>({
+    identifier: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState<LoginErrors>({});  
+  const router = useRouter();
+  const handleSubmit = async () => {
+  const validationErrors = validateLogin(formData);
+  setErrors(validationErrors);
+  if (Object.keys(validationErrors).length > 0) return;
+  // هون رح يجي الـ API call لاحقاً
+  // const res = await loginUser(formData);
 };
   return (
     // [DESIGN/STRUCTURE] - خلفية ناعمة
     <div className="min-h-screen flex items-center justify-center bg-[#f0f9f7] p-4">
-      
       {/* // [DESIGN/STRUCTURE] - الكارد الرئيسي (تم تصغير العرض من 390 لـ 340) */}
       <div className="bg-white w-full max-w-[340px] rounded-[35px] p-6 md:p-7 shadow-xl shadow-primary/5 border border-white/50">
-        
-        {/* اللوجو - تم تصغير الخط */}
+        {/* اللوجو  */}
         <div className="text-center mb-6">
           <h1 className="text-[28px] font-black italic tracking-tighter bg-gradient-to-r from-primary to-[#43a047] bg-clip-text text-transparent">
             مُتاح
           </h1>
           <p className="text-gray-400 text-[11px] font-medium">منصة التأجير الأولى في فلسطين</p>
         </div>
-
         {/* سويتش (تسجيل دخول / إنشاء حساب) - تم تصغير الارتفاع والخط */}
         <div className="flex bg-gray-50 p-1 rounded-xl mb-6">
           <button className="flex-1 py-2 rounded-[10px] bg-primary text-white text-[12px] font-bold shadow-sm shadow-primary/20">
@@ -71,7 +54,7 @@ export default function LoginPage() {
         </div>
 
         {/* // [DESIGN/STRUCTURE] - نموذج تسجيل الدخول */}
-        <form className="space-y-3.5 text-right">
+        <div className="space-y-3.5 text-right">
           
           {/* حقل اسم المستخدم - تم تقليل الـ padding الداخلي */}
           <div className="relative group">
@@ -128,11 +111,13 @@ export default function LoginPage() {
           </div>
 
           {/* زر الدخول - تم تصغير الارتفاع والخط */}
-          <button    type="button"
-          onClick={() => { if (validate()) router.push("/dashboard"); }}           className="w-full py-3 mt-1 rounded-[16px] bg-gradient-to-r from-primary to-[#43a047] text-white font-bold text-[14px] shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all">
+          <button 
+              type="button"
+              onClick={handleSubmit}           
+               className="w-full py-3 mt-1 rounded-[16px] bg-gradient-to-r from-primary to-[#43a047] text-white font-bold text-[14px] shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all">
             تسجيل الدخول
           </button>
-        </form>
+        </div>
 
         {/* فاصل "أو" */}
         <div className="flex items-center gap-3 my-6">

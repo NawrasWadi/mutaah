@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Chatbot from "@/components/Chatbot"; // تأكدي من المسار
 
 export const metadata: Metadata = {
   title: "مُتاح - شارك واستفيد",
@@ -22,7 +23,10 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         {children}
+                <Chatbot /> 
+
       </body>
     </html>
   );
 }
+
