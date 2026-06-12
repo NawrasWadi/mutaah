@@ -3,33 +3,37 @@
 @theme {
   --color-primary: #00a79d;
   --color-primary-light: #f0fdfa;
+  --color-gradient-start: #00a79d;
+  --color-gradient-end: #43a047;
+  
+  --font-sans: var(--font-cairo), var(--font-jakarta), sans-serif;
 }
 
 @source "../components";
 @source "../app";
 
-body {
-  /* نستخدم كايرو للعربي و Plus Jakarta للأرقام */
-  font-family: 'Cairo', 'Plus Jakarta Sans', sans-serif !important;
-  background-color: #f8fafc;
-  direction: rtl;
-}
-
-/* إعدادات أيقونات جوجل - انسخيها بدقة */
 .material-symbols-rounded {
-  font-family: 'Material Symbols Rounded' !important;
-  display: inline-block;
-  vertical-align: middle;
-  direction: ltr; /* الأيقونة دائماً لليسار برمجياً */
+  font-family: var(--font-material-symbols) !important;
   font-weight: normal;
   font-style: normal;
+  font-size: 24px;
   line-height: 1;
   letter-spacing: normal;
   text-transform: none;
+  display: inline-block;
   white-space: nowrap;
   word-wrap: normal;
-  
-  /* السطرين الجايين هم أهم شي لتحويل النصوص لأيقونات */
-  font-feature-settings: 'liga'; 
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'liga';
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

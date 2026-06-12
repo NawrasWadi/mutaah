@@ -1,7 +1,12 @@
-"use client";
+import type { Metadata } from "next";
 import Link from "next/link";
-import UserDropdown from "../../components/UserDropdown";
-import Footer from "../../components/footer";
+import UserDropdown from "@/components/UserDropdown";
+import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "الإشعارات — مُتاح",
+  description: "تابع آخر الإشعارات والتحديثات على منصة مُتاح.",
+};
 
 export default function NotificationsPage() {
 
@@ -16,24 +21,18 @@ export default function NotificationsPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc]">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       
-      {/* // [DESIGN/STRUCTURE] - الهيدر المعدل (عكس الاتجاهات + زر الرجوع) */}
-      {/* // [DESIGN/STRUCTURE] - الهيدر (X أقصى اليمين، لوجو في الوسط، كلمة الإشعارات يسار) */}
-      {/* // [DESIGN/STRUCTURE] - الهيدر (الإشعارات يمين، لوجو نص، X شمال) */}
       <header className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100 sticky top-0 z-50">
         
-        {/* 1. أقصى اليمين: عنوان الصفحة */}
         <div className="text-lg font-black text-gray-800">
           الإشعارات
         </div>
 
-        {/* 2. المنتصف: اللوجو */}
         <div className="flex-1 flex justify-center">
            <div className="text-2xl font-black text-primary italic select-none">مُتاح</div>
         </div>
 
-        {/* 3. أقصى اليسار: زر الإغلاق (X) */}
         <div className="flex items-center">
           <Link 
             href="/dashboard" 
@@ -45,33 +44,30 @@ export default function NotificationsPage() {
 
       </header>
 
-      {/* // [DESIGN/STRUCTURE] - المحتوى الرئيسي */}
       <main className="grow max-w-4xl mx-auto w-full p-6 py-10">
         
         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
           
           <div className="flex items-center justify-between p-6 border-b border-gray-50">
             <h1 className="text-base font-black text-gray-800">كل الإشعارات</h1>
-            <button className="text-[13px] font-bold text-primary hover:underline transition-all">
+            <button className="text-sm font-bold text-primary hover:underline transition-all">
               تحديد الكل كمقروء
             </button>
           </div>
 
           <div className="flex flex-col">
-            {/* // [CONTENT/DATA] - عرض الإشعارات مع الخط الفاصل الرفيع */}
-            {notifications.map((notif, index) => (
+            {notifications.map((notif) => (
               <div 
                 key={notif.id} 
-                 /* الخط الفاصل صار أغمق (border-gray-200) ليكون واضحاً */
                 className={`flex gap-4 p-6 transition-all border-b border-gray-200 last:border-0 hover:bg-gray-50/30 ${!notif.isRead ? 'bg-primary/[0.02]' : ''}`}
->
+              >
                 <div className="shrink-0 pt-1.5">
                   <div className={`w-2 h-2 rounded-full ${notif.isRead ? 'bg-gray-200' : 'bg-primary shadow-[0_0_8px_rgba(0,167,157,0.4)]'}`}></div>
                 </div>
 
                 <div className="flex-1 text-right">
-                  <div className="flex items-center gap-2 font-bold text-[14px] text-gray-800 mb-1">
-                    <span className={`material-symbols-rounded text-[18px] ${
+                  <div className="flex items-center gap-2 font-bold text-sm text-gray-800 mb-1">
+                    <span className={`material-symbols-rounded text-sm ${
                       notif.color === 'orange' ? 'text-orange-500' : 
                       notif.color === 'green' ? 'text-green-500' : 'text-primary'
                     }`}>
@@ -79,7 +75,7 @@ export default function NotificationsPage() {
                     </span>
                     {notif.title}
                   </div>
-                  <p className="text-[13px] text-gray-500 leading-relaxed">
+                  <p className="text-sm text-gray-500 leading-relaxed">
                     {notif.desc}
                   </p>
 
@@ -102,7 +98,7 @@ export default function NotificationsPage() {
                   )}
                 </div>
 
-                <div className="text-[10px] text-gray-300 font-bold whitespace-nowrap pt-1 uppercase">
+                <div className="text-xs text-gray-300 font-bold whitespace-nowrap pt-1 uppercase">
                   {notif.time}
                 </div>
               </div>

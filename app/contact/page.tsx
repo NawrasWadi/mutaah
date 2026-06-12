@@ -1,10 +1,15 @@
-"use client";
+import type { Metadata } from "next";
 import Link from "next/link";
-import Footer from "../../components/footer";
+import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "تواصل معنا — مُتاح",
+  description: "نحن هنا للإجابة على استفساراتك ومساعدتك في استخدام منصة مُتاح.",
+};
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc]">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       
       {/* // [DESIGN/STRUCTURE] - الهيدر (العنوان يمين، لوجو وسط، X شمال) */}
       <header className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100 sticky top-0 z-50">
@@ -50,12 +55,12 @@ export default function ContactPage() {
                 <span className="material-symbols-rounded">mail</span>
             </div>
             <div>
-                <div className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">البريد الإلكتروني</div>
+                <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">البريد الإلكتروني</div>
              {/* هنا جعلنا الإيميل رابطاً قابلاً للضغط */}
                 <a 
-                 href="mailto:support@mutaah.ps" 
+                 href="mailto:mutaah.platform@gmail.com" 
                 className="font-bold text-gray-700 hover:text-primary transition-colors block"
-                >
+                 >
                  mutaah.platform@gmail.com
                 </a>
             </div>
@@ -67,7 +72,7 @@ export default function ContactPage() {
                   <span className="material-symbols-rounded">call</span>
                 </div>
                 <div className="text-right">
-                  <div className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">رقم الهاتف</div>
+                  <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">رقم الهاتف</div>
                   <div className="font-bold text-gray-700" dir="ltr">+970 59X XXX XXX</div>
                 </div>
               </div>
@@ -78,7 +83,7 @@ export default function ContactPage() {
                   <span className="material-symbols-rounded">location_on</span>
                 </div>
                 <div>
-                  <div className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">المقر الرئيسي</div>
+                  <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">المقر الرئيسي</div>
                   <div className="font-bold text-gray-700">فلسطين — غزة</div>
                 </div>
               </div>
@@ -113,7 +118,7 @@ export default function ContactPage() {
               ></textarea>
             </div>
 
-            <button className="w-full py-4 rounded-[20px] bg-gradient-to-r from-primary to-[#43a047] text-white font-bold text-[16px] shadow-lg shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all">
+            <button className="w-full py-4 rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end text-white font-bold text-base shadow-lg shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all">
               إرسال الرسالة
             </button>
 
