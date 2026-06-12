@@ -2,12 +2,24 @@
 
 @theme {
   --color-primary: #00a79d;
+<<<<<<< HEAD
   --color-primary-light: #f0fdfa;
   --color-gradient-start: #00a79d;
   --color-gradient-end: #43a047;
   
   --font-sans: var(--font-cairo), var(--font-jakarta), sans-serif;
+=======
+  --color-primary-light: #f0f9f7;
+  --color-green-harvest: #43a047;
+  --color-bg-page: #f8fafc;
+  --radius-card: 35px;
+  --radius-btn: 16px;
+  --radius-tab: 10px;
+  --radius-container: 32px;
+  --radius-section: 24px;
+>>>>>>> upstream/main
 }
+
 
 @source "../components";
 @source "../app";
@@ -26,6 +38,7 @@
   direction: ltr;
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
+<<<<<<< HEAD
   font-feature-settings: 'liga';
 }
 
@@ -37,3 +50,17 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+=======
+
+}
+/* --- كود إخفاء مؤشر نيكست (يُوضع بالخارج وحده) --- */
+nextjs-portal, 
+#_next-static-indicator, 
+[data-nextjs-toast-wrapper],
+#nextjs-dev-indicator {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+>>>>>>> upstream/main

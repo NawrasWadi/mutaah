@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+<<<<<<< HEAD
 
 const menuItems = [
   { label: "حسابي", icon: "account_circle", href: "/profile" },
@@ -8,12 +9,24 @@ const menuItems = [
   { label: "إضافة عنصر", icon: "add_box", href: "/add-item" },
   { label: "الاشتراكات", icon: "workspace_premium", href: "/subscriptions" },
 ] as const;
+=======
+>>>>>>> upstream/main
 
-export default function UserDropdown() {
+// أضفنا تعريف الـ Props هنا
+interface UserDropdownProps {
+  align?: "left" | "right"; // علامة الاستفهام تعني أنه اختياري
+}
+
+export default function UserDropdown({ align = "right" }: UserDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // تحديد الكلاسات بناءً على الـ align
+  // إذا كان اليسار (في صفحة البروفايل)، نستخدم left-0
+  // إذا كان اليمين (في الداشبورد)، نستخدم right-0
+  const alignmentClass = align === "left" ? "left-0 origin-top-left" : "right-0 origin-top-right";
+
   return (
-    <div className="relative">
+    <div className="relative z-[200]">
       <div 
         onClick={() => setIsOpen(!isOpen)}
         className="w-10 h-10 rounded-full bg-primary-light border-2 border-primary/30 flex items-center justify-center text-primary cursor-pointer hover:shadow-md transition-all active:scale-90"
@@ -25,7 +38,8 @@ export default function UserDropdown() {
         <>
           <div className="fixed inset-0 z-[90]" onClick={() => setIsOpen(false)}></div>
           
-          <div className="absolute top-12 right-0 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden z-[99] animate-in fade-in zoom-in duration-200 origin-top-right text-right">
+          {/* استخدمنا المتغير alignmentClass هنا 👇 */}
+          <div className={`absolute top-12 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden z-[200] animate-in fade-in zoom-in duration-200 text-right ${alignmentClass}`}>
             
             <div className="p-4 border-b border-gray-50 bg-gray-50/50">
               <div className="text-sm font-bold text-gray-800">أحمد سالم</div>
@@ -33,12 +47,26 @@ export default function UserDropdown() {
             </div>
 
             <div className="p-1">
+<<<<<<< HEAD
               {menuItems.map((item) => (
                 <Link 
                   href={item.href}
                   key={item.href}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 cursor-pointer hover:bg-primary-light hover:text-primary transition-colors rounded-lg group"
+=======
+              {[
+                { label: "حسابي", icon: "account_circle", href: "/profile" },
+                { label: "إدارة عناصري", icon: "inventory_2", href: "/my-items" },
+                { label: "إضافة عنصر", icon: "add_box", href: "/add-item" },
+                { label: "الاشتراكات", icon: "workspace_premium", href: "/subscriptions" },
+              ].map((item, index) => (
+                <Link 
+                  href={item.href}
+                  key={index}
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-gray-600 cursor-pointer hover:bg-primary-light hover:text-primary transition-colors rounded-lg group"
+>>>>>>> upstream/main
                 >
                    <span className="material-symbols-rounded text-sm text-gray-400 group-hover:text-primary transition-colors">{item.icon}</span>
                    <span className="font-medium">{item.label}</span>

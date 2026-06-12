@@ -7,8 +7,13 @@ export default function Footer() {
         
         <div className="w-full md:w-80 space-y-4">
           <div className="text-primary text-3xl font-black italic tracking-tighter">مُتاح</div>
+<<<<<<< HEAD
           <p className="text-gray-100 text-sm leading-relaxed">
            منصة تأجير الأغراض الأولى في غزة<br />
+=======
+          <p className="text-gray-100 text-[14px] leading-relaxed">
+           منصة تأجير الأغراض الأولى في فلسطين<br />
+>>>>>>> upstream/main
             <span className="text-gray-400 font-medium italic">لا تشتري — شارك واستفيد</span>
           </p>
         </div>

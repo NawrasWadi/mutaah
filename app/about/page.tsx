@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import type { Metadata } from "next";
+=======
+ "use client";
+>>>>>>> upstream/main
 import Link from "next/link";
 import Footer from "@/components/Footer";
 

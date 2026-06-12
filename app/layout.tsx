@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cairo, Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+import Chatbot from "@/components/Chatbot"; // تأكدي من المسار
 
 const cairo = Cairo({
   subsets: ["arabic"],
@@ -34,7 +35,14 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${cairo.variable} ${plusJakarta.variable} ${materialSymbols.variable} antialiased font-sans bg-slate-50 text-slate-900`}>
         {children}
+                <Chatbot /> 
+
       </body>
     </html>
   );
+<<<<<<< HEAD
 }
+=======
+}
+
+>>>>>>> upstream/main
