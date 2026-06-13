@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import PhoneVerificationModal from "../../components/EmailVerificationModal";
+import EmailVerificationModal from "@/components/EmailVerificationModal";
 import { locationData } from "@/mock/locations";
 import { RegisterErrors, RegisterFormData } from "@/types/auth";
 import { validateRegister } from "@/validations/auth.validation";
@@ -219,7 +219,7 @@ export default function RegisterPage() {
 
       </div>
 
-      <PhoneVerificationModal
+      <EmailVerificationModal
         isOpen={isVerifyModalOpen}
         onClose={() => setIsVerifyModalOpen(false)}
       />

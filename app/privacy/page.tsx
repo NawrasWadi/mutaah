@@ -76,7 +76,7 @@ export default function PrivacyPage() {
         </div>
 
         {/* تنبيه إضافي ختامي */}
-        <div className="mt-12 p-6 bg-primary/[0.03] border border-dashed border-primary/20 rounded-[24px] text-center">
+        <div className="mt-12 p-6 bg-primary/[0.03] border border-dashed border-primary/20 rounded-[32px] text-center">
           <p className="text-primary text-xs font-bold leading-relaxed">
             باستخدامك لمنصة مُتاح، فأنت توافق على جمع ومعالجة بياناتك وفقاً لهذه السياسة.<br />
             آخر تحديث: مايو 2026

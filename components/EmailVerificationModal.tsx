@@ -17,7 +17,7 @@ export default function EmailVerificationModal({ isOpen, onClose, email = "examp
       
       <div className="absolute inset-0" onClick={onClose}></div>
 
-      <div className="relative bg-white w-full max-w-[340px] rounded-[40px] p-8 shadow-2xl shadow-primary/20 border border-white animate-in zoom-in-95 duration-300">
+      <div className="relative bg-white w-full max-w-[340px] rounded-[32px] p-8 shadow-2xl shadow-primary/20 border border-white animate-in zoom-in-95 duration-300">
         
         {/* أيقونة البريد */}
         <div className="flex flex-col items-center text-center mb-6">
@@ -59,7 +59,7 @@ export default function EmailVerificationModal({ isOpen, onClose, email = "examp
         {/* زر التأكيد */}
         <button
           onClick={() => router.push("/dashboard")}
-          className="w-full py-3.5 rounded-[18px] bg-gradient-to-r from-primary to-[#43a047] text-white font-bold text-[15px] shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all"
+          className="w-full py-3.5 rounded-[32px] bg-gradient-to-r from-primary to-[#43a047] text-white font-bold text-[15px] shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all"
         >
           تأكيد البريد
         </button>

@@ -118,7 +118,7 @@ export default function ContactPage() {
               ></textarea>
             </div>
 
-            <button className="w-full py-4 rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end text-white font-bold text-base shadow-lg shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all">
+            <button className="w-full py-4 rounded-[32px] bg-gradient-to-r from-gradient-start to-gradient-end text-white font-bold text-base shadow-lg shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all">
               إرسال الرسالة
             </button>
 

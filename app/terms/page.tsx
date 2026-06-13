@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import Footer from "../../components/footer";
+import Footer from "@/components/Footer";
 
 export default function TermsPage() {
   // [CONTENT/DATA] - قائمة الشروط (سهلة التعديل مستقبلاً)
@@ -48,10 +48,10 @@ export default function TermsPage() {
 
       <main className="grow p-6">
         
-        <section className="bg-[#f8fafc] rounded-[40px] md:rounded-[50px] py-12 px-6 md:px-12 max-w-4xl mx-auto w-full border border-gray-50 shadow-sm">
+        <section className="bg-[#f8fafc] rounded-[32px] md:rounded-[32px] py-12 px-6 md:px-12 max-w-4xl mx-auto w-full border border-gray-50 shadow-sm">
           
           {/* تنبيه هام (Agreement Box) */}
-          <div className="bg-orange-50 border border-orange-100 p-5 rounded-[24px] mb-12 flex items-start gap-4 text-right">
+          <div className="bg-orange-50 border border-orange-100 p-5 rounded-[32px] mb-12 flex items-start gap-4 text-right">
              <span className="material-symbols-rounded text-orange-500 mt-0.5">info</span>
              <p className="text-orange-700 text-[13px] font-bold leading-relaxed">
                بمجرد استخدامك لمنصة مُتاح، فأنت توافق على الالتزام بكافة الشروط المذكورة أدناه لضمان تجربة آمنة وموثوقة للجميع.

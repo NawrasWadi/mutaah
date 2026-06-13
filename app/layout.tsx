@@ -40,9 +40,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-<<<<<<< HEAD
 }
-=======
-}
-
->>>>>>> upstream/main

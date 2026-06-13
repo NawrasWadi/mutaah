@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import Footer from "../../components/footer";
-import UserDropdown from "../../components/UserDropdown";
+import Footer from "@/components/Footer";
+import UserDropdown from "@/components/UserDropdown";
 import { plans } from "@/mock/plans.data";
 import { mockUserPlan } from "@/mock/user.mock";
 import { PlanType } from "@/types/auth";
@@ -16,7 +16,7 @@ export default function SubscriptionsPage() {
     <div className="min-h-screen flex flex-col bg-white">
 
       {/* الهيدر */}
-      <header className="h-20 flex items-center justify-between px-8 border-b border-gray-100 bg-white sticky top-0 z-[100];">
+      <header className="h-20 flex items-center justify-between px-8 border-b border-gray-100 bg-white sticky top-0 z-[100]">
         <Link href="/dashboard" className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary transition-all border border-gray-100">
           <span className="material-symbols-rounded text-lg">arrow_forward</span>
         </Link>
