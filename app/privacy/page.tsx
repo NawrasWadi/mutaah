@@ -1,10 +1,15 @@
-"use client";
+import type { Metadata } from "next";
 import Link from "next/link";
-import Footer from "../../components/footer";
+import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "سياسة الخصوصية — مُتاح",
+  description: "سياسة حماية البيانات والخصوصية لمنصة مُتاح.",
+};
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc]">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       
       {/* // [DESIGN/STRUCTURE] - الهيدر الموحد (العنوان يمين، لوجو وسط، X شمال) */}
       <header className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100 sticky top-0 z-50">
@@ -43,32 +48,27 @@ export default function PrivacyPage() {
               <span className="material-symbols-rounded">edit_document</span>
               <h3 className="text-lg font-bold">1. جمع المعلومات</h3>
             </div>
-            {/* // [CONTENT/DATA] - نص سياسة الخصوصية */}
-            <p className="text-gray-500 text-[14px] leading-loose">
+            <p className="text-gray-500 text-sm leading-loose">
               نحن نجمع المعلومات التي تزودنا بها عند التسجيل، مثل الاسم، رقم الهاتف، وصورة الهوية. هذه المعلومات تُستخدم حصرياً لأغراض التوثيق وضمان حقوق جميع الأطراف داخل المنصة، ولن يتم عرضها للعامة.
             </p>
           </div>
 
-          {/* القسم الثاني: حماية البيانات */}
           <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm text-right">
             <div className="flex items-center gap-3 mb-4 text-primary">
               <span className="material-symbols-rounded">security</span>
               <h3 className="text-lg font-bold">2. حماية البيانات</h3>
             </div>
-            {/* // [CONTENT/DATA] - نص سياسة الخصوصية */}
-            <p className="text-gray-500 text-[14px] leading-loose">
+            <p className="text-gray-500 text-sm leading-loose">
               تستخدم منصة <span className="font-bold text-primary">مُتاح</span> تقنيات تشفير SSL متطورة لضمان سرية بياناتك المالية والشخصية. جميع البيانات تُخزن في خوادم محمية ومشفرة، لضمان عدم وصول أي طرف ثالث غير مصرح له إليها.
             </p>
           </div>
 
-          {/* القسم الثالث: مشاركة المعلومات */}
           <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm text-right">
             <div className="flex items-center gap-3 mb-4 text-primary">
               <span className="material-symbols-rounded">share</span>
               <h3 className="text-lg font-bold">3. مشاركة المعلومات</h3>
             </div>
-            {/* // [CONTENT/DATA] - نص سياسة الخصوصية */}
-            <p className="text-gray-500 text-[14px] leading-loose">
+            <p className="text-gray-500 text-sm leading-loose">
               نحن نحترم خصوصيتك؛ لذا لا نقوم ببيع أو تأجير بياناتك الشخصية لأي جهات تسويقية. يتم مشاركة معلومات التواصل الضرورية (مثل رقم الهاتف) فقط مع الطرف الآخر في العملية (المؤجر أو المستأجر) عند إتمام عملية الحجز رسمياً لتنسيق عملية الاستلام والتسليم.
             </p>
           </div>
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
         </div>
 
         {/* تنبيه إضافي ختامي */}
-        <div className="mt-12 p-6 bg-primary/[0.03] border border-dashed border-primary/20 rounded-[24px] text-center">
+        <div className="mt-12 p-6 bg-primary/[0.03] border border-dashed border-primary/20 rounded-[32px] text-center">
           <p className="text-primary text-xs font-bold leading-relaxed">
             باستخدامك لمنصة مُتاح، فأنت توافق على جمع ومعالجة بياناتك وفقاً لهذه السياسة.<br />
             آخر تحديث: مايو 2026

@@ -63,7 +63,7 @@ export default function Chatbot() {
 
       {/* 2. نافذة الشات بوت */}
       {isOpen && (
-        <div className="absolute bottom-16 left-0 w-[310px] bg-white rounded-[28px] shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+        <div className="absolute bottom-16 left-0 w-[310px] bg-white rounded-[32px] shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
           
           {/* الهيدر */}
           <div className="bg-gradient-to-r from-primary to-[#43a047] p-4 flex items-center gap-3 text-white">

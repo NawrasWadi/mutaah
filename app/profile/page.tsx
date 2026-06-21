@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import Footer from "../../components/footer";
+import Footer from "@/components/Footer";
 import { locationData } from "@/mock/locations";
 import { UserProfile, ProfileErrors } from "@/types/auth";
-import UserDropdown from "../../components/UserDropdown";
+import UserDropdown from "@/components/UserDropdown";
 import { validateProfile } from "@/validations/auth.validation";
 import {mockUser, mockUserStats, mockFinancialSummary ,mockUserPlan } from "@/mock/user.mock";
 export default function ProfilePage() {

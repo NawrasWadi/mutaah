@@ -1,10 +1,29 @@
 import type { Metadata } from "next";
+import { Cairo, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Chatbot from "@/components/Chatbot"; // تأكدي من المسار
 
+const cairo = Cairo({
+  subsets: ["arabic"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-cairo",
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-jakarta",
+});
+
+const materialSymbols = localFont({
+  src: "../public/fonts/MaterialSymbolsRounded.woff2",
+  variable: "--font-material-symbols",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "مُتاح - شارك واستفيد",
-
 };
 
 export default function RootLayout({
@@ -13,15 +32,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ar" dir="rtl">
-      <head>
-        {/* روابط جوجل فونت الرسمية */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-      </head>
-      <body className="antialiased">
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <body className={`${cairo.variable} ${plusJakarta.variable} ${materialSymbols.variable} antialiased font-sans bg-slate-50 text-slate-900`}>
         {children}
                 <Chatbot /> 
 
@@ -29,4 +41,3 @@ export default function RootLayout({
     </html>
   );
 }
-

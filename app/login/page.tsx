@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import ForgotPasswordModal from "../../components/ForgotPasswordModal"; // استيراد المودال
+import ForgotPasswordModal from "@/components/ForgotPasswordModal";
 import { useRouter } from "next/navigation";
 import { validateLogin } from "@/validations/auth.validation";
 import { LoginErrors, LoginFormData } from "@/types/auth";
@@ -26,7 +26,7 @@ export default function LoginPage() {
     // [DESIGN/STRUCTURE] - خلفية ناعمة
     <div className="min-h-screen flex items-center justify-center bg-[#f0f9f7] p-4">
       {/* // [DESIGN/STRUCTURE] - الكارد الرئيسي (تم تصغير العرض من 390 لـ 340) */}
-      <div className="bg-white w-full max-w-[340px] rounded-[35px] p-6 md:p-7 shadow-xl shadow-primary/5 border border-white/50">
+      <div className="bg-white w-full max-w-[340px] rounded-[32px] p-6 md:p-7 shadow-xl shadow-primary/5 border border-white/50">
         {/* اللوجو  */}
         <div className="text-center mb-6">
           <h1 className="text-[28px] font-black italic tracking-tighter bg-gradient-to-r from-primary to-[#43a047] bg-clip-text text-transparent">

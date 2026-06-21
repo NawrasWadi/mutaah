@@ -1,7 +1,12 @@
-"use client";
+import type { Metadata } from "next";
 import Link from "next/link";
-import Footer from "../../components/footer";
+import Footer from "@/components/Footer";
 import { mockNotifications } from "@/mock/notifications.mock";
+
+export const metadata: Metadata = {
+  title: "الإشعارات — مُتاح",
+  description: "تابع آخر الإشعارات والتحديثات على منصة مُتاح.",
+};
 
 export default function NotificationsPage() {
 
@@ -13,8 +18,9 @@ export default function NotificationsPage() {
     };
     return colors[color ?? "primary"];
   };
+
   return (
-    <div className="min-h-screen flex flex-col bg-bg-page">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <header className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="text-lg font-black text-gray-800">
           الإشعارات
@@ -30,11 +36,12 @@ export default function NotificationsPage() {
           </Link>
         </div>
       </header>
+
       <main className="grow max-w-4xl mx-auto w-full p-6 py-10">
-        <div className="bg-white rounded-container border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between p-6 border-b border-gray-50">
             <h1 className="text-base font-black text-gray-800">كل الإشعارات</h1>
-            <button className="text-xs font-bold text-primary hover:underline transition-all">
+            <button className="text-sm font-bold text-primary hover:underline transition-all">
               تحديد الكل كمقروء
             </button>
           </div>
@@ -42,7 +49,7 @@ export default function NotificationsPage() {
             {mockNotifications.map((notif) => (
               <div
                 key={notif.id}
-                className={`flex gap-4 p-6 transition-all border-b border-gray-200 last:border-0 hover:bg-gray-50/30 ${!notif.is_read ? "bg-primary/2" : ""}`}
+                className={`flex gap-4 p-6 transition-all border-b border-gray-200 last:border-0 hover:bg-gray-50/30 ${!notif.is_read ? "bg-primary/[0.02]" : ""}`}
               >
                 <div className="shrink-0 pt-1.5">
                   <div className={`w-2 h-2 rounded-full ${notif.is_read ? "bg-gray-200" : "bg-primary shadow-[0_0_8px_rgba(0,167,157,0.4)]"}`}></div>
@@ -50,13 +57,13 @@ export default function NotificationsPage() {
 
                 <div className="flex-1 text-right">
                   <div className="flex items-center gap-2 font-bold text-sm text-gray-800 mb-1">
-                    <span className={`material-symbols-rounded text-lg ${getIconColor(notif.color)}`}>
+                    <span className={`material-symbols-rounded text-sm ${getIconColor(notif.color)}`}>
                       {notif.icon}
                     </span>
                     {notif.title}
                   </div>
 
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <p className="text-sm text-gray-500 leading-relaxed">
                     {notif.message}
                   </p>
 
@@ -78,6 +85,7 @@ export default function NotificationsPage() {
                     </button>
                   )}
                 </div>
+
                 <div className="text-xs text-gray-300 font-bold whitespace-nowrap pt-1 uppercase">
                   {notif.time}
                 </div>

@@ -1,42 +1,37 @@
-import React from 'react';
 import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#111827] pt-16 pb-8 px-8 text-right mt-auto w-full" dir="rtl">
+    <footer className="bg-gray-900 pt-16 pb-8 px-8 text-right mt-auto w-full" dir="rtl">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12 border-b border-gray-800 pb-12">
         
-        {/* العمود الأول: البراند */}
         <div className="w-full md:w-80 space-y-4">
           <div className="text-primary text-3xl font-black italic tracking-tighter">مُتاح</div>
           <p className="text-gray-100 text-[14px] leading-relaxed">
-           منصة تأجير الأغراض الأولى في فلسطين<br />
+           منصة تأجير الأغراض الأولى في غزة<br />
             <span className="text-gray-400 font-medium italic">لا تشتري — شارك واستفيد</span>
           </p>
         </div>
 
-        {/* الروابط في المنتصف */}
         <div className="flex flex-wrap gap-16 md:gap-24 text-right">
           <div className="flex flex-col gap-4">
-            <h4 className="text-white font-bold text-[16px] mb-2">عن المنصة</h4>
-            <Link href="/about" className="text-gray-400 text-[13px] hover:text-primary transition-all">من نحن</Link>
-            <Link href="/contact" className="text-gray-400 text-[13px] hover:text-primary transition-all">تواصل معنا</Link>
-            <Link href="/support" className="text-gray-400 text-[13px] hover:text-primary transition-all">الدعم الفني</Link>
+            <h4 className="text-white font-bold text-base mb-2">عن المنصة</h4>
+            <Link href="/about" className="text-gray-400 text-sm hover:text-primary transition-all">من نحن</Link>
+            <Link href="/contact" className="text-gray-400 text-sm hover:text-primary transition-all">تواصل معنا</Link>
+            <Link href="/support" className="text-gray-400 text-sm hover:text-primary transition-all">الدعم الفني</Link>
           </div>
 
           <div className="flex flex-col gap-4">
-            <h4 className="text-white font-bold text-[16px] mb-2">القانوني</h4>
-            <Link href="/privacy" className="text-gray-400 text-[13px] hover:text-primary transition-all">سياسة الخصوصية</Link>
-            <Link href="/terms" className="text-gray-400 text-[13px] hover:text-primary transition-all">شروط الاستخدام</Link>
+            <h4 className="text-white font-bold text-base mb-2">القانوني</h4>
+            <Link href="/privacy" className="text-gray-400 text-sm hover:text-primary transition-all">سياسة الخصوصية</Link>
+            <Link href="/terms" className="text-gray-400 text-sm hover:text-primary transition-all">شروط الاستخدام</Link>
           </div>
         </div>
 
-        {/* العمود الأخير: السوشيال ميديا */}
         <div className="flex flex-col gap-4">
-          <h4 className="text-white font-bold text-[16px] mb-2">تابعنا:</h4>
+          <h4 className="text-white font-bold text-base mb-2">تابعنا:</h4>
           <div className="flex gap-4">
             
-            {/* فيسبوك */}
             <a 
               href="https://m.facebook.com/story.php?story_fbid=pfbid02ZUSg4kEYQf6Vxdtb2j2cZXoJbUgvBGarQzNVFFZcr3EtV6u6GUHZswCP9K4ok5VJl&id=61590405176679&sfnsn=wa" 
               target="_blank" 
@@ -48,7 +43,6 @@ export default function Footer() {
               </svg>
             </a>
 
-            {/* انستجرام */}
             <a 
               href="https://www.instagram.com/mutaah.platform?igsh=MXBqM2ZjMml5bGp1dw==" 
               target="_blank" 
@@ -65,7 +59,7 @@ export default function Footer() {
       </div>
 
       <div className="max-w-7xl mx-auto pt-8 flex justify-center items-center">
-        <span className="text-gray-500 text-[12px]">
+        <span className="text-gray-500 text-xs">
            مُتاح — جميع الحقوق محفوظة
         </span>
       </div>
