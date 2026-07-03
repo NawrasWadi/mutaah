@@ -5,6 +5,7 @@ import ForgotPasswordModal from "@/components/ForgotPasswordModal";
 import { useRouter } from "next/navigation";
 import { validateLogin } from "@/validations/auth.validation";
 import { LoginErrors, LoginFormData } from "@/types/auth";
+
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
