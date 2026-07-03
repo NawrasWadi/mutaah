@@ -82,24 +82,33 @@ export default function ProfilePage() {
               </div>
 
               {/* شارة التوثيق */}
-              <div className="flex justify-center mb-5 z-10 relative">
+<div className="flex justify-center mb-5 z-10 relative">
+  {formData.identity_status === "accepted" && (
+    <span className="flex items-center gap-1 text-xs font-black text-primary bg-white px-3 py-1 rounded-full shadow-sm">
+      <span className="material-symbols-rounded text-xs">verified</span> موثق
+    </span>
+  )}
 
-              {formData.identity_status === "accepted" && (
-                <span className="flex items-center gap-1 text-xs font-black text-primary bg-white px-3 py-1 rounded-full shadow-sm">
-                  <span className="material-symbols-rounded text-xs">verified</span> موثق
-                </span>
-              )}
-              {formData.identity_status === "pending" && (
-                <span className="flex items-center gap-1 text-xs font-black text-orange-500 bg-white px-3 py-1 rounded-full shadow-sm">
-                  <span className="material-symbols-rounded text-xs">pending</span> قيد المراجعة
-                </span>
-              )}
-              {formData.identity_status === "rejected" && (
-                <span className="flex items-center gap-1 text-xs font-black text-red-500 bg-white px-3 py-1 rounded-full shadow-sm">
-                  <span className="material-symbols-rounded text-xs">cancel</span> غير موثق
-                </span>
-              )}
-              </div>
+  {formData.identity_status === "pending" && (
+    <Link
+      href="/verify-identity"
+      className="flex items-center gap-1 text-xs font-black text-orange-500 bg-white px-3 py-1 rounded-full shadow-sm hover:bg-orange-50 transition-all"
+    >
+      <span className="material-symbols-rounded text-xs">pending</span> قيد المراجعة
+    </Link>
+  )}
+
+  {formData.identity_status === "rejected" && (
+  <Link
+    href="/verify-identity"
+    className="flex items-center gap-1.5 text-xs font-black text-red-500 bg-red-50 border border-red-100 px-3.5 py-1.5 rounded-full shadow-sm hover:bg-red-100 transition-all"
+  >
+    <span className="material-symbols-rounded text-xs">cancel</span>
+    غير موثق — وثّق الآن
+    <span className="material-symbols-rounded text-xs">arrow_back</span>
+  </Link>
+)}
+</div>
 
               {/* قسم الخطة */}
               <div className="bg-white/10 rounded-btn p-3 mb-4 border border-white/10 text-right z-10 relative backdrop-blur-sm">
