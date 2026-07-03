@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import { mockNotifications } from "@/mock/notifications.mock";
-
+import UserDropdown from "@/components/UserDropdown";
 export const metadata: Metadata = {
   title: "الإشعارات — مُتاح",
   description: "تابع آخر الإشعارات والتحديثات على منصة مُتاح.",
@@ -20,21 +20,17 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <header className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div className="text-lg font-black text-gray-800">
-          الإشعارات
-        </div>
-        <div className="flex-1 flex justify-center">
-          <div className="text-2xl font-black text-primary italic select-none">مُتاح</div>
-        </div>
-        <div className="flex items-center">
-          <Link
-            href="/dashboard"
-            className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all border border-gray-200 hover:border-red-100">
-            <span className="material-symbols-rounded text-xl">close</span>
+  
+    <div className="min-h-screen flex flex-col bg-bg-page">
+      <header className="h-14 flex items-center justify-between px-6 border-b border-gray-100 bg-white sticky top-0 z-50">
+        <div className="flex items-center gap-2">
+          <Link href="/dashboard" className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary transition-all border border-gray-100">
+            <span className="material-symbols-rounded text-lg">arrow_forward</span>
           </Link>
+          <div className="text-lg font-black text-gray-800 tracking-tight">الإشعارات</div>
         </div>
+        <div className="text-xl font-black text-primary italic select-none">مُتاح</div>
+        <UserDropdown align="left" />
       </header>
 
       <main className="grow max-w-4xl mx-auto w-full p-6 py-10">
