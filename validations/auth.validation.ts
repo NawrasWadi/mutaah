@@ -2,6 +2,8 @@ import { LoginErrors, LoginFormData } from "@/types/auth";
 import { RegisterFormData, RegisterErrors } from "@/types/auth";
 import { UserProfile, ProfileErrors } from "@/types/auth";
 
+
+
 export const validateLogin = (
   data: LoginFormData
 ): LoginErrors => {
@@ -33,7 +35,6 @@ if (!data.identifier.trim()) {
 
   return errors;
 };
-
 
 export const validateRegister = (data: RegisterFormData): RegisterErrors => {
   const errors: RegisterErrors = {};
