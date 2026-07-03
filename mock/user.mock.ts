@@ -8,7 +8,7 @@ export const mockUser: UserProfile = {
   governorate: "غزة",
   district: "الرمال",
   avatar: "",
-  identity_status: "accepted",
+  identity_status: "rejected",
 }
 
 export const mockUserStats: UserStats = {
@@ -22,5 +22,11 @@ export const mockFinancialSummary: FinancialSummary = {
 }
 // mock/user.mock.ts
 export const mockUserPlan: UserPlan = {
-  plan_type: "standard", // 'standard' | 'plus' | 'pro'
-}
+  plan_type: "standard",
+  max_listings_per_month: 1,
+  max_rentals_per_month: 5,
+  commission_rate: 10,
+  has_detailed_reports: false,
+  listings_count_this_month: 0,
+  rentals_count_this_month: 0,
+};
