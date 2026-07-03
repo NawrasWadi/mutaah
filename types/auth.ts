@@ -1,3 +1,5 @@
+import { PlanLimits } from "@/types/subscriptions";
+
 export interface LoginFormData {
   identifier: string;
   password: string;
@@ -7,6 +9,7 @@ export interface LoginErrors {
   identifier?: string;
   password?: string;
 }
+
 export interface RegisterFormData {
   fullName: string;
   username: string;
@@ -56,7 +59,7 @@ export interface FinancialSummary {
   deposit_amount: number;
 }
 
-export type PlanType = "standard" | "plus" | "pro";
-export interface UserPlan {
-  plan_type: PlanType;
+export interface UserPlan extends PlanLimits {
+  listings_count_this_month: number;
+  rentals_count_this_month: number;
 }
