@@ -5,6 +5,9 @@ import ForgotPasswordModal from "@/components/ForgotPasswordModal";
 import { useRouter } from "next/navigation";
 import { validateLogin } from "@/validations/auth.validation";
 import { LoginErrors, LoginFormData } from "@/types/auth";
+import { authService } from "@/services/auth.service";
+import { tokenStorage } from "@/utils/tokenStorage";
+import { AxiosError } from "axios";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -14,14 +17,30 @@ export default function LoginPage() {
     identifier: "",
     password: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState(""); 
   const [errors, setErrors] = useState<LoginErrors>({});  
   const router = useRouter();
   const handleSubmit = async () => {
   const validationErrors = validateLogin(formData);
   setErrors(validationErrors);
   if (Object.keys(validationErrors).length > 0) return;
-  // هون رح يجي الـ API call لاحقاً
-  // const res = await loginUser(formData);
+
+  setApiError("");
+  setIsSubmitting(true);
+  try {
+    const res = await authService.login(formData);
+    tokenStorage.setToken(res.access_token);
+    router.push("/dashboard");
+  } catch (error) {
+    const message =
+      error instanceof AxiosError
+        ? error.response?.data?.message
+        : "بيانات الدخول غير صحيحة";
+    setApiError(message || "بيانات الدخول غير صحيحة");
+  } finally {
+    setIsSubmitting(false);
+  }
 };
   return (
     // [DESIGN/STRUCTURE] - خلفية ناعمة
@@ -112,13 +131,19 @@ export default function LoginPage() {
           </div>
 
           {/* زر الدخول - تم تصغير الارتفاع والخط */}
-          <button 
-              type="button"
-              onClick={handleSubmit}           
-               className="w-full py-3 mt-1 rounded-[16px] bg-gradient-to-r from-primary to-[#43a047] text-white font-bold text-[14px] shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all">
-            تسجيل الدخول
-          </button>
+<button 
+    type="button"
+    onClick={handleSubmit}
+    disabled={isSubmitting}
+     className="w-full py-3 mt-1 rounded-[16px] bg-gradient-to-r from-primary to-[#43a047] text-white font-bold text-[14px] shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+  {isSubmitting ? "جارِ الدخول..." : "تسجيل الدخول"}
+</button>
         </div>
+      
+{apiError && (
+  <p className="text-red-500 text-[11px] text-center mt-2">{apiError}</p>
+)}
+
 
         {/* فاصل "أو" */}
         <div className="flex items-center gap-3 my-6">

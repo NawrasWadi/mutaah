@@ -1,35 +1,57 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import EmailVerificationModal from "@/components/EmailVerificationModal";
-import { locationData } from "@/mock/locations";
+// import EmailVerificationModal from "@/components/EmailVerificationModal";
+import { locationData , governorateLabels } from "@/mock/locations";
 import { RegisterErrors, RegisterFormData } from "@/types/auth";
 import { validateRegister } from "@/validations/auth.validation";
+import { authService } from "@/services/auth.service";
+import { AxiosError } from "axios";
+import { tokenStorage } from "@/utils/tokenStorage";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState<RegisterFormData>({
-    fullName: "",
+    full_name: "",
     username: "",
     email: "",
     governorate: "",
-    area: "",
+    district: "",
     password: "",
     confirmPassword: "",
     terms: false,
   });
+
+  const router = useRouter();
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
-  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+  //const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(true);
 
-  const handleSubmit = async () => {
-    const validationErrors = validateRegister(formData);
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
-    setIsVerifyModalOpen(true);
-    // هون رح يجي الـ API call لاحقاً
-    // const res = await registerUser(formData);
-  };
+  const [isSubmitting, setIsSubmitting] = useState(false);
+const [apiError, setApiError] = useState("");
+
+const handleSubmit = async () => {
+  const validationErrors = validateRegister(formData);
+  setErrors(validationErrors);
+  if (Object.keys(validationErrors).length > 0) return;
+
+  setApiError("");
+  setIsSubmitting(true);
+  try {
+    const res = await authService.register(formData);
+    tokenStorage.setToken(res.access_token);
+    router.push("/dashboard");
+  } catch (error) {
+    const message =
+      error instanceof AxiosError
+        ? error.response?.data?.message
+        : "حدث خطأ، حاول مرة أخرى";
+    setApiError(message || "حدث خطأ، حاول مرة أخرى");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-primary-light p-4 py-12">
@@ -63,13 +85,13 @@ export default function RegisterPage() {
               <input
                 type="text"
                 placeholder="محمد أحمد الخطيب"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                value={formData.full_name}
+                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                 className="w-full pr-11 pl-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:bg-white focus:border-primary transition-all"
               />
             </div>
           </div>
-          {errors.fullName && <p className="text-red-500 text-xs mt-1 text-right">{errors.fullName}</p>}
+          {errors.full_name && <p className="text-red-500 text-xs mt-1 text-right">{errors.full_name}</p>}
 
           {/* اسم المستخدم */}
           <div className="space-y-1">
@@ -112,11 +134,11 @@ export default function RegisterPage() {
                 <select
                   className="w-full pr-11 pl-10 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none appearance-none cursor-pointer focus:bg-white focus:border-primary"
                   value={formData.governorate}
-                  onChange={(e) => setFormData({ ...formData, governorate: e.target.value, area: "" })}
+                  onChange={(e) => setFormData({ ...formData, governorate: e.target.value, district: "" })}
                 >
                   <option value="">اختر المحافظة</option>
                   {Object.keys(locationData).map((gov) => (
-                    <option key={gov} value={gov}>{gov}</option>
+                    <option key={gov} value={gov}>{governorateLabels[gov]}</option>
                   ))}
                 </select>
                 <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">expand_more</span>
@@ -127,8 +149,8 @@ export default function RegisterPage() {
                 <span className="material-symbols-rounded absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-lg">location_on</span>
                 <select
                   className="w-full pr-11 pl-10 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none appearance-none cursor-pointer focus:bg-white focus:border-primary disabled:opacity-50"
-                  value={formData.area}
-                  onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                  value={formData.district}
+                  onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                   disabled={!formData.governorate}
                 >
                   <option value="">اختر المنطقة / الحي</option>
@@ -138,7 +160,7 @@ export default function RegisterPage() {
                 </select>
                 <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">expand_more</span>
               </div>
-              {errors.area && <p className="text-red-500 text-xs mt-1 text-right">{errors.area}</p>}
+              {errors.district && <p className="text-red-500 text-xs mt-1 text-right">{errors.district}</p>}
             </div>
           </div>
 
@@ -200,12 +222,16 @@ export default function RegisterPage() {
 
           {/* زر إنشاء الحساب */}
           <button
-            type="button"
-            onClick={handleSubmit}
-            className="w-full py-3.5 mt-2 rounded-btn bg-gradient-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all"
-          >
-            إنشاء حساب
-          </button>
+  type="button"
+  onClick={handleSubmit}
+  disabled={isSubmitting}
+  className="w-full py-3.5 mt-2 rounded-btn bg-gradient-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  {isSubmitting ? "جارِ الإنشاء..." : "إنشاء حساب"}
+</button>
+          {apiError && (
+  <p className="text-red-500 text-xs text-center mt-2">{apiError}</p>
+)}
         </div>
 
         <div className="mt-6 text-center">
@@ -219,10 +245,6 @@ export default function RegisterPage() {
 
       </div>
 
-      <EmailVerificationModal
-        isOpen={isVerifyModalOpen}
-        onClose={() => setIsVerifyModalOpen(false)}
-      />
     </div>
   );
 }

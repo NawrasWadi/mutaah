@@ -8,13 +8,21 @@ import UserDropdown from "@/components/UserDropdown";
 import HourPeriodSelect from "@/components/HourPeriodSelect";
 import { MONTH_NAMES, DAY_LABELS } from "@/utils/calendar";
 import { TimeValue, HOUR_NUMBERS, PERIODS, from24Hour, isTimeComplete } from "@/utils/time";
+import { useRouter } from "next/navigation";
+import { useUserProfile } from "@/context/UserProfileContext";
+import { useNotifications } from "@/context/NotificationsContext";
+import RentalRequestModal from "@/components/RentalRequestModal";
 
 export default function ProductDetailPage() {
   const params = useParams();
   const productId = Number(params.id);
   const product = mockProductDetails[productId];
-
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const { toggleFavorite, isFavorite } = useFavorites();
+  const router = useRouter();
+  const { profile } = useUserProfile();
+  const { addNotification } = useNotifications();
+  const isVerified = profile.identity_status === "accepted";
   const [activeImage, setActiveImage] = useState(0);
 
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
@@ -39,7 +47,7 @@ export default function ProductDetailPage() {
   // كل ساعة-فترة مسموحة ضمن تقاطع الأيام المختارة (لـ "نفس الساعات لكل الأيام")
   const intersectionAllowedHours = useMemo(() => {
     if (selectedDates.length === 0) return [];
-    const ranges = selectedDates
+  const ranges = selectedDates
       .map((date) => availableByDate.get(date))
       .filter((d) => d && !d.is_all_day) as { start_time: string; end_time: string }[];
 
@@ -48,14 +56,14 @@ export default function ProductDetailPage() {
       return HOUR_NUMBERS.flatMap((h) => PERIODS.map((p) => ({ hour: h, period: p.value as "ص" | "م" })));
     }
 
-    const latestStart = ranges.reduce((max, r) => (r.start_time > max ? r.start_time : max), "00:00");
-    const earliestEnd = ranges.reduce((min, r) => (r.end_time < min ? r.end_time : min), "23:59");
+  const latestStart = ranges.reduce((max, r) => (r.start_time > max ? r.start_time : max), "00:00");
+  const earliestEnd = ranges.reduce((min, r) => (r.end_time < min ? r.end_time : min), "23:59");
 
     if (latestStart >= earliestEnd) return [];
 
-    const result: { hour: number; period: "ص" | "م" }[] = [];
+  const result: { hour: number; period: "ص" | "م" }[] = [];
     for (let h = 0; h < 24; h++) {
-      const time24 = `${String(h).padStart(2, "0")}:00`;
+  const time24 = `${String(h).padStart(2, "0")}:00`;
       if (time24 >= latestStart && time24 <= earliestEnd) {
         result.push(from24Hour(time24));
       }
@@ -67,13 +75,13 @@ export default function ProductDetailPage() {
   const allSelectedDaysAreFullDay = selectedDates.every((d) => availableByDate.get(d)?.is_all_day);
 
   const getAllowedHoursForDay = (date: string) => {
-    const availability = availableByDate.get(date);
+  const availability = availableByDate.get(date);
     if (!availability || availability.is_all_day) {
       return HOUR_NUMBERS.flatMap((h) => PERIODS.map((p) => ({ hour: h, period: p.value as "ص" | "م" })));
     }
-    const result: { hour: number; period: "ص" | "م" }[] = [];
+  const result: { hour: number; period: "ص" | "م" }[] = [];
     for (let h = 0; h < 24; h++) {
-      const time24 = `${String(h).padStart(2, "0")}:00`;
+  const time24 = `${String(h).padStart(2, "0")}:00`;
       if (time24 >= availability.start_time && time24 <= availability.end_time) {
         result.push(from24Hour(time24));
       }
@@ -85,7 +93,7 @@ export default function ProductDetailPage() {
   const handleNextImage = () => setActiveImage((prev) => (prev === product.product_images.length - 1 ? 0 : prev + 1));
 
   const toggleSelectDay = (isoDate: string) => {
-    const availability = availableByDate.get(isoDate);
+  const availability = availableByDate.get(isoDate);
     if (!availability || availability.is_booked) return;
 
     setSelectedDates((prev) =>
@@ -148,7 +156,7 @@ export default function ProductDetailPage() {
               <img
   src={product.product_images[activeImage]}
   alt={product.title}
-  className="w-full h-full object-cover"
+  className="w-full h-full object-contain p-2"
 />
 
               <button type="button" onClick={() => toggleFavorite(product.id)} className="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
@@ -220,6 +228,21 @@ export default function ProductDetailPage() {
 
               <p className="text-xs text-gray-500 leading-relaxed">{product.description}</p>
             </div>
+
+            {!isVerified && (
+  <div className="bg-orange-50 border border-orange-100 rounded-card p-4 flex items-center justify-between gap-3">
+    <div className="flex items-center gap-2">
+      <span className="material-symbols-rounded text-orange-500 text-xl">security</span>
+      <p className="text-xs font-bold text-orange-600">لازم توثّق هويتك أولاً قبل الاستئجار</p>
+    </div>
+    <Link
+      href={`/verify-identity?next=/products/${product.id}`}
+      className="bg-orange-500 text-white text-xs font-bold px-4 py-2 rounded-lg whitespace-nowrap hover:brightness-105 transition-all"
+    >
+      وثّق الآن
+    </Link>
+  </div>
+)}
 
             {/* الكاليندر */}
             <div className="bg-white rounded-card border border-gray-100 p-4">
@@ -361,18 +384,41 @@ export default function ProductDetailPage() {
             )}
 
             <button
-              type="button"
-              disabled={!isBookingComplete}
-              className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <span className="material-symbols-rounded text-lg">handshake</span>
-              طلب استئجار
-            </button>
+  type="button"
+  disabled={!isBookingComplete}
+ onClick={() => {
+  if (!isVerified) {
+    router.push(`/verify-identity?next=/products/${product.id}`);
+    return;
+  }
+  addNotification({
+    title: "تم قبول طلبك!",
+    message: `وافق ${product.owner_full_name} على طلب استئجار "${product.title}"`,
+    time: "الآن",
+    is_read: false,
+    icon: "check_circle",
+    color: "primary",
+    actionLabel: "اضغط هنا لاستكمال عملية الإيجار",
+    type: "rental_status",
+    ref_id: product.id,
+  });
+  setIsRequestModalOpen(true);
+}}
+  className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+>
+  <span className="material-symbols-rounded text-lg">handshake</span>
+  طلب استئجار
+</button>
 
           </div>
 
-        </div>
+         </div>
       </main>
+
+      <RentalRequestModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+      />
     </div>
   );
 }

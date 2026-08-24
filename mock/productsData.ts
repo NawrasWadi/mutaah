@@ -1,8 +1,10 @@
 import { ProductStatus, DayAvailability } from "@/types/product";
 import { getCategoryIcon } from "@/utils/productCategory";
 
-// صور Placeholder من Lorem Picsum — مخصصة للاستخدام كنماذج أولية، قابلة للاستبدال لاحقاً بصور حقيقية مرفوعة من المالك
-const img = (id: number) => `https://picsum.photos/id/${id}/600/450`;
+// صور Placeholder من LoremFlickr — كل صورة مرتبطة بكلمة مفتاحية توصف المنتج فعلياً
+// (بدل Lorem Picsum يلي كان بيرجع صور عشوائية بدون علاقة بالمحتوى)
+// قابلة للاستبدال لاحقاً بصور حقيقية مرفوعة من المالك
+// lock=${seed} بيثبت نفس الصورة بكل مرة بدل ما تتغير عشوائياً مع كل تحميل للصفحة
 
 export interface ProductRecord {
   id: number;
@@ -26,39 +28,45 @@ export interface ProductRecord {
 }
 
 export const PRODUCTS_DATA: ProductRecord[] = [
-  {
-    id: 1,
-    title: "كاميرا سوني A7 III",
-    category: "تصوير",
-    price_per_hour: 25,
-    deposit_amount: 300,
-    status: "active",
-    governorate: "غزة",
-    district: "الرمال",
-    owner_full_name: "أحمد محمد سالم",
-    owner_identity_status: "accepted",
-    description: "كاميرا احترافية مناسبة للتصوير الفوتوغرافي والفيديو. مزودة بعدسة 28-70mm، بطاريتين وشاحن.",
-    images: [img(250), img(251), img(252), img(253)],
-    icon: "photo_camera",
-    rental_count: 12,
-    rating: 4.9,
-    available_dates: [
-      { date: "2025-05-01", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
-      { date: "2025-05-04", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
-      { date: "2025-05-05", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
-      { date: "2025-05-06", start_time: "00:00", end_time: "23:59", is_all_day: true, is_booked: false },
-      { date: "2025-05-07", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: true },
-      { date: "2025-05-08", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
-      { date: "2025-05-09", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
-      { date: "2025-05-10", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: true },
-      { date: "2025-05-13", start_time: "10:00", end_time: "13:00", is_all_day: false, is_booked: false },
-      { date: "2025-05-14", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
-    ],
-  },
+ {
+  id: 1,
+  title: "كاميرا سوني A7 III",
+  category: "تصوير",
+  price_per_hour: 25,
+  deposit_amount: 300,
+  status: "active",
+  governorate: "غزة",
+  district: "الرمال",
+  owner_full_name: "أحمد محمد سالم",
+  owner_identity_status: "accepted",
+  description:
+    "كاميرا احترافية مناسبة للتصوير الفوتوغرافي والفيديو. مزودة بعدسة 28-70mm، بطاريتين وشاحن.",
+  images: [
+    "/images/products/Sony_Camera_1.jpg.jpg",
+    "/images/products/Sony_Camera_2.jpg.jpg",
+    "/images/products/Sony_Camera_3.jpg.webp",
+    "/images/products/Sony_Camera_4.jpg.jpg",
+  ],
+  icon: "photo_camera",
+  rental_count: 12,
+  rating: 4.9,
+  available_dates: [
+    { date: "2025-05-01", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
+    { date: "2025-05-04", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
+    { date: "2025-05-05", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
+    { date: "2025-05-06", start_time: "00:00", end_time: "23:59", is_all_day: true, is_booked: false },
+    { date: "2025-05-07", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: true },
+    { date: "2025-05-08", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
+    { date: "2025-05-09", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
+    { date: "2025-05-10", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: true },
+    { date: "2025-05-13", start_time: "10:00", end_time: "13:00", is_all_day: false, is_booked: false },
+    { date: "2025-05-14", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
+  ],
+},
   {
     id: 2,
     title: "مولد كهرباء 5KW",
-    category: "طاقة ومولدات",
+    category: "طاقة",
     price_per_hour: 40,
     deposit_amount: 500,
     status: "active",
@@ -67,8 +75,7 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     owner_full_name: "محمد خالد",
     owner_identity_status: "accepted",
     description: "مولد كهرباء بقدرة 5 كيلوواط، مناسب للمناسبات والطوارئ، يعمل بالبنزين.",
-    images: [img(300), img(301), img(302), img(303)],
-    icon: "bolt",
+    images: ["/images/products/Power_Generator_5KW_1.jpg.jpg"],    icon: "bolt",
     rental_count: 8,
     is_currently_rented: true,
     expiry_date: "15 مايو",
@@ -89,8 +96,7 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     owner_full_name: "خالد أبو سيف",
     owner_identity_status: "accepted",
     description: "مثقاب كهربائي بقوة عالية، مناسب لأعمال البناء والتركيب المنزلي.",
-    images: [img(20), img(21), img(22), img(23)],
-    icon: "construction",
+    images: ["/images/products/Bosch_Electric_Drill_1.jpg.jpg", "/images/products/Bosch_Electric_Drill_2.jpg.webp", "/images/products/Bosch_Electric_Drill_3.jpg.jpg", "/images/products/Bosch_Electric_Drill_4.jpg.jpg"],    icon: "construction",
     rental_count: 3,
     available_dates: [
       { date: "2025-05-03", start_time: "08:00", end_time: "18:00", is_all_day: false, is_booked: false },
@@ -109,8 +115,7 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     owner_full_name: "سامر يوسف",
     owner_identity_status: "accepted",
     description: "لابتوب بمواصفات عالية، مناسب للتصميم والبرمجة والاستخدام المكتبي المكثف.",
-    images: [img(60), img(61), img(62), img(63)],
-    icon: "laptop",
+    images: ["/images/products/Dell_XPS_15_Laptop_1.jpg.jpg", "/images/products/Dell_XPS_15_Laptop_2.jpg.jpg", "/images/products/Dell_XPS_15_Laptop_3.jpg.webp"],    icon: "laptop",
     rental_count: 5,
     available_dates: [
       { date: "2025-05-02", start_time: "09:00", end_time: "21:00", is_all_day: false, is_booked: false },
@@ -130,8 +135,7 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     owner_full_name: "وائل حماد",
     owner_identity_status: "accepted",
     description: "سيارة سيدان موديل 2022، صيانة دورية، مناسبة للرحلات والمناسبات.",
-    images: [img(111), img(112), img(113), img(114)],
-    icon: "directions_car",
+    images: ["/images/products/Hyundai_2022_Car_1.jpg.jpg", "/images/products/Hyundai_2022_Car_2.jpg.jpg"],    icon: "directions_car",
     rental_count: 6,
     is_currently_rented: true,
     expiry_date: "20 مايو",
@@ -152,8 +156,7 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     owner_full_name: "ليان عودة",
     owner_identity_status: "accepted",
     description: "آيفون 14 برو بحالة ممتازة، مناسب للتصوير والاستخدام اليومي.",
-    images: [img(160), img(161), img(162), img(163)],
-    icon: "smartphone",
+images: ["/images/products/iPhone_14_Pro_1.jpg.jpg", "/images/products/iPhone_14_Pro_2.jpg.jpg"],    icon: "smartphone",
     rental_count: 9,
     available_dates: [
       { date: "2025-05-04", start_time: "08:00", end_time: "22:00", is_all_day: false, is_booked: false },
@@ -163,7 +166,7 @@ export const PRODUCTS_DATA: ProductRecord[] = [
   {
     id: 7,
     title: "ألواح شمسية 400W",
-    category: "طاقة ومولدات",
+    category: "طاقة",
     price_per_hour: 25,
     deposit_amount: 350,
     status: "active",
@@ -172,8 +175,7 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     owner_full_name: "عمر الفرا",
     owner_identity_status: "accepted",
     description: "لوح شمسي بقدرة 400 واط، مناسب لتشغيل الأجهزة الأساسية أثناء انقطاع الكهرباء.",
-    images: [img(180), img(181), img(182), img(183)],
-    icon: "solar_power",
+images: ["/images/products/Solar_Panel_400W_1.webp.webp", "/images/products/Solar_Panel_400W_2.jpg.jpg"],    icon: "solar_power",
     rental_count: 4,
     available_dates: [
       { date: "2025-05-06", start_time: "00:00", end_time: "23:59", is_all_day: true, is_booked: false },
@@ -192,8 +194,7 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     owner_full_name: "هبة سلامة",
     owner_identity_status: "accepted",
     description: "جهاز قياس ضغط دم رقمي دقيق، مناسب للاستخدام المنزلي.",
-    images: [img(200), img(201), img(202), img(203)],
-    icon: "medical_services",
+images: ["/images/products/Blood_Pressure_Monitor_1.jpg.jpg", "/images/products/Blood_Pressure_Monitor_2.jpg.jpg", "/images/products/Blood_Pressure_Monitor_3.jpg.jpg"],    icon: "medical_services",
     rental_count: 2,
     available_dates: [
       { date: "2025-05-08", start_time: "08:00", end_time: "20:00", is_all_day: false, is_booked: false },
@@ -211,8 +212,7 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     owner_full_name: "يوسف النجار",
     owner_identity_status: "accepted",
     description: "درون احترافي بجودة تصوير 4K، مناسب للفيديوهات الجوية والمناسبات.",
-    images: [img(219), img(220), img(221), img(222)],
-    icon: "videocam",
+images: ["/images/products/DJI_Drone_1.jpg.jpg"],    icon: "videocam",
     rental_count: 11,
     is_currently_rented: true,
     expiry_date: "16 مايو",
@@ -233,8 +233,7 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     owner_full_name: "رنا زقوت",
     owner_identity_status: "accepted",
     description: "شاشة سمارت 55 إنش دقة 4K، مناسبة للعروض والمناسبات.",
-    images: [img(230), img(231), img(232), img(233)],
-    icon: "tv",
+images: ["/images/products/Samsung_55_Inch_TV_1.jpg.jpg", "/images/products/Samsung_55_Inch_TV_2.jpg.jpg"],    icon: "tv",
     rental_count: 7,
     available_dates: [
       { date: "2025-05-09", start_time: "10:00", end_time: "22:00", is_all_day: false, is_booked: false },
@@ -253,8 +252,7 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     owner_full_name: "باسل حرب",
     owner_identity_status: "accepted",
     description: "طابعة ليزر أبيض وأسود، سريعة وموفرة للحبر، مناسبة للطباعة الكثيفة.",
-    images: [img(24), img(25), img(26), img(27)],
-    icon: "print",
+images: ["/images/products/HP_Laser_Printer_1.jpg.jpg"],    icon: "print",
     rental_count: 3,
     available_dates: [
       { date: "2025-05-07", start_time: "08:00", end_time: "18:00", is_all_day: false, is_booked: false },
@@ -272,8 +270,7 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     owner_full_name: "دانا شحادة",
     owner_identity_status: "accepted",
     description: "ميكروسكوب رقمي بدقة تكبير عالية، مناسب للأبحاث والدراسة.",
-    images: [img(48), img(49), img(50), img(51)],
-    icon: "science",
+    images: ["/images/products/Digital_Microscope_1.jpg.jpg", "/images/products/Digital_Microscope_2.jpg.jpg"],    icon: "science",
     rental_count: 1,
     available_dates: [
       { date: "2025-05-20", start_time: "09:00", end_time: "17:00", is_all_day: false, is_booked: false },

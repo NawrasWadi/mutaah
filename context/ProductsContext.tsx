@@ -9,6 +9,7 @@ interface ProductsContextType {
   updateProduct: (id: number, updates: Partial<PublicProduct>) => void;
   updateProductStatus: (id: number, status: PublicProduct["status"]) => void;
   removeProduct: (id: number) => void;
+  markAsRented: (id: number) => void;
 }
 
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined);
@@ -31,9 +32,12 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
   const removeProduct = (id: number) => {
     setProducts((prev) => prev.filter((p) => p.id !== id));
   };
+  const markAsRented = (id: number) => {
+  updateProduct(id, { is_currently_rented: true });
+};
 
   return (
-    <ProductsContext.Provider value={{ products, addProduct, updateProduct, updateProductStatus, removeProduct }}>
+    <ProductsContext.Provider value={{ products, addProduct, updateProduct, updateProductStatus, removeProduct,markAsRented  }}>
       {children}
     </ProductsContext.Provider>
   );

@@ -11,27 +11,29 @@ export interface LoginErrors {
 }
 
 export interface RegisterFormData {
-  fullName: string;
+  full_name: string;
   username: string;
   email: string;
   governorate: string;
-  area: string;
+  district: string;
   password: string;
   confirmPassword: string;
   terms: boolean;
 }
 
 export interface RegisterErrors {
-  fullName?: string;
+  full_name?: string;
   username?: string;
   email?: string;
   governorate?: string;
-  area?: string;
+  district?: string;
   password?: string;
   confirmPassword?: string;
   terms?: string;
 }
  export interface UserProfile {
+  id: number;              // ⭐ جديد — للربط مع owner_id بالمنتجات وتمييز اليوزرز عن بعض
+  password: string;        // ⭐ جديد — للتحقق وقت تسجيل الدخول (نص صريح، مقبول بمرحلة الموك فقط)
   full_name: string;
   username: string;
   email: string; 

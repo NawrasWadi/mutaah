@@ -1,11 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useState } from "react"; // موجودة أصلاً، تأكدي بس
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import UserDropdown from "@/components/UserDropdown";
+import { useProducts } from "@/context/ProductsContext";
 
 export default function PaymentGatewayPage() {
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
-
+  const params = useParams();
+const router = useRouter();
+const productId = params.id;
+const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+const { markAsRented } = useProducts();
   const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -119,17 +125,53 @@ export default function PaymentGatewayPage() {
           <button
             type="button"
             disabled={!receiptFile}
+            onClick={() => {
+                  setPaymentConfirmed(true);
+                  markAsRented(Number(productId));
+                   }}
             className="w-full py-3.5 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <span className="material-symbols-rounded text-lg">send</span>
-            تأكيد الدفع وإرسال الطلب
+              >
+          <span className="material-symbols-rounded text-lg">send</span>
+             تأكيد الدفع وإرسال الطلب
           </button>
 
           <p className="text-center text-xs text-gray-400 flex items-center justify-center gap-1 mt-3">
             <span className="material-symbols-rounded text-primary text-sm">lock</span>
             الدفع مؤمّن عبر بنك فلسطين — SSL مشفر
           </p>
+{paymentConfirmed && (
+  <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-primary/10 backdrop-blur-sm">
+    <div className="relative bg-white w-full max-w-[360px] rounded-[32px] p-8 shadow-2xl shadow-primary/20 border border-white text-center">
 
+      <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
+        <span className="material-symbols-rounded text-green-600 text-3xl">check_circle</span>
+      </div>
+
+      <h2 className="text-lg font-black text-gray-800 mb-2">تم الدفع بنجاح!</h2>
+      <p className="text-xs text-gray-500 leading-relaxed mb-6">
+        سيتم مراجعة الإيصال وتأكيد العملية خلال دقائق. يمكنك الآن التواصل مع المالك لتنسيق موعد التسليم.
+      </p>
+
+      <div className="flex flex-col gap-3">
+        <Link
+          href={`/chat/${productId}`}
+          className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+        >
+          <span className="material-symbols-rounded text-lg">chat</span>
+          الذهاب للمحادثة مع المالك
+        </Link>
+
+        <Link
+          href="/dashboard"
+          className="w-full py-3 rounded-btn bg-gray-50 text-gray-600 font-bold text-sm border border-gray-100 hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
+        >
+          العودة للرئيسية
+        </Link>
+      </div>
+
+    </div>
+  </div>
+)}
         </div>
       </main>
     </div>

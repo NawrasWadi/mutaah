@@ -16,8 +16,8 @@ export const mockSubmitVerification = async (): Promise<VerificationResult> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       // غيّري المفتاح هون لتجربة سيناريو مختلف، مثلاً mockVerificationOutcomes.rejectedFaceMismatch
-      resolve(mockVerificationOutcomes.rejectedNotIdCard);
-    }, 1500);
+      resolve(mockVerificationOutcomes.accepted);
+    }, 500);
   });
 };
 

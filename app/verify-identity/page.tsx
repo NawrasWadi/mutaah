@@ -3,6 +3,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import UserDropdown from "@/components/UserDropdown";
+import { useSearchParams } from "next/navigation";
+import { useUserProfile } from "@/context/UserProfileContext";
 import { mockSubmitVerification } from "@/mock/verificationResult.mock";
 import {
   VerificationErrorReason,
@@ -15,6 +17,9 @@ type PageState = "form" | "processing" | "accepted" | "pending" | "rejected";
 
 export default function VerifyIdentityPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next") || "/profile";
+  const { updateIdentityStatus } = useUserProfile();
   const [pageState, setPageState] = useState<PageState>("form");
 
   const [idImage, setIdImage] = useState<File | null>(null);
@@ -39,6 +44,8 @@ export default function VerifyIdentityPage() {
 
     if (result.status === "accepted") {
       setPageState("accepted");
+       updateIdentityStatus("accepted");
+       setPageState("accepted");
     } else if (result.status === "pending") {
       setPageState("pending");
     } else if (result.status === "rejected" && result.error_status) {
@@ -160,8 +167,7 @@ export default function VerifyIdentityPage() {
               <p className="text-xs text-gray-500 mb-6">يمكنك الآن إضافة منتجات واستئجارها بكل أمان.</p>
               <button
                 type="button"
-                onClick={() => router.push("/profile")}
-                className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all"
+                  onClick={() => router.push(nextPath)}                className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all"
               >
                 متابعة
               </button>

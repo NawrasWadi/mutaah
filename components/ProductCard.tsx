@@ -4,7 +4,7 @@ import Link from "next/link";
 import { PublicProduct } from "@/types/product";
 import { useFavorites } from "@/context/FavoritesContext";
 
-export default function ProductCard({ id, title, governorate, district, price_per_hour, icon, image_url, status }: PublicProduct) {
+export default function ProductCard({ id, title, governorate, district, price_per_hour, icon, image_url, status,is_currently_rented  }: PublicProduct) {
   const isAvailable = status === "active";
   const { toggleFavorite, isFavorite } = useFavorites();
 
@@ -14,12 +14,12 @@ export default function ProductCard({ id, title, governorate, district, price_pe
       className="group bg-white rounded-container border border-gray-100 shadow-sm overflow-hidden flex flex-col w-full transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
     >
 
-       <div className="h-32 bg-primary-light flex items-center justify-center relative m-2 rounded-section overflow-hidden">
+       <div className="h-48 bg-primary-light flex items-center justify-center relative m-2 rounded-section overflow-hidden">
     {image_url ? (
       <img
         src={image_url}
         alt={title}
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        className=" h-full object-cover transition-transform duration-500 group-hover:scale-110"
       />
     ) : (
       <span className="material-symbols-rounded text-4xl text-gray-300 transition-transform duration-500 group-hover:scale-110">
@@ -28,12 +28,18 @@ export default function ProductCard({ id, title, governorate, district, price_pe
     )}
 
         <div className="absolute top-2 right-2">
-          <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
-            isAvailable ? "bg-white/90 text-primary border-primary/20" : "bg-orange-50 text-orange-500 border-orange-100"
-          }`}>
-            {isAvailable ? "متاح" : "غير متاح"}
-          </span>
-        </div>
+  {is_currently_rented ? (
+    <span className="px-2 py-0.5 rounded-full text-xs font-bold border bg-orange-50 text-orange-500 border-orange-100">
+      مؤجر حالياً
+    </span>
+  ) : (
+    <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
+      isAvailable ? "bg-white/90 text-primary border-primary/20" : "bg-orange-50 text-orange-500 border-orange-100"
+    }`}>
+      {isAvailable ? "متاح" : "غير متاح"}
+    </span>
+  )}
+</div>
 
         <button
           onClick={(e) => {

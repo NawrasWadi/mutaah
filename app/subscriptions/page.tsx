@@ -2,16 +2,36 @@
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import UserDropdown from "@/components/UserDropdown";
-import { plans } from "@/mock/plans.data";
-import { mockUserPlan } from "@/mock/user.mock";
-import { PlanType } from "@/types/auth";
-export default function SubscriptionsPage() {
+import { useQuery } from "@tanstack/react-query";
+import { subscriptionsService } from "@/services/subscriptions.service";
+import { queryKeys } from "@/api/queryKeys";
+import { PlanType } from "@/types/subscriptions";
 
- const getButtonText = (planType: PlanType) => {
-  if (planType === mockUserPlan.plan_type) return "خطتك الحالية";
-  if (planType === "standard") return "العودة لهذه الخطة";
-  return "اشترك الآن";
-};
+export default function SubscriptionsPage() {
+  const { data: plans, isLoading: isLoadingPlans } = useQuery({
+    queryKey: queryKeys.plans,
+    queryFn: subscriptionsService.getPlans,
+  });
+
+  const { data: currentPlan, isLoading: isLoadingCurrentPlan } = useQuery({
+    queryKey: queryKeys.currentPlan,
+    queryFn: subscriptionsService.getCurrentPlan,
+  });
+
+  const getButtonText = (planType: PlanType) => {
+    if (planType === currentPlan?.plan_type) return "خطتك الحالية";
+    if (planType === "standard") return "العودة لهذه الخطة";
+    return "اشترك الآن";
+  };
+
+  if (isLoadingPlans || isLoadingCurrentPlan || !plans) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg-page">
+        <div className="text-gray-400 text-sm font-bold">جارِ التحميل...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
 
@@ -40,7 +60,7 @@ export default function SubscriptionsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 max-w-5xl mx-auto items-stretch">
             {plans.map((plan, index) => {
-              const isCurrent = plan.plan_type === mockUserPlan.plan_type;
+              const isCurrent = plan.plan_type === currentPlan?.plan_type;
               const isPlus = plan.plan_type === "plus";
               const isPro = plan.plan_type === "pro";
 
@@ -105,8 +125,7 @@ export default function SubscriptionsPage() {
           </p>
         </section>
       </main>
-
-      <Footer />
+ <Footer />
     </div>
   );
 }

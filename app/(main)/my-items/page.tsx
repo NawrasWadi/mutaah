@@ -10,7 +10,7 @@ import { mockProducts } from "@/mock/product";
 import MyItemCard from "@/components/MyItemCard";
 import ProductCard from "@/components/ProductCard";
 import UserDropdown from "@/components/UserDropdown";
-import Footer from "@/components/Footer";
+import { useMemo } from "react";
 
 export default function ManageItemsPage() {
   const router = useRouter();
@@ -19,12 +19,22 @@ export default function ManageItemsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const { favoriteIds, clearFavorites } = useFavorites();
-  const { updateProductStatus, removeProduct } = useProducts();
+ const { products: liveProducts, updateProductStatus, removeProduct } = useProducts();
   const favoriteProducts = mockProducts.filter((p) => favoriteIds.includes(p.id));
 
-  const rentedItems = myItems.filter((item) => item.is_currently_rented);
-  const activeItemsCount = myItems.filter((item) => item.status === "active").length;
+  const mergedItems = useMemo(
+    () =>
+      myItems.map((item) => {
+        const liveMatch = liveProducts.find((p) => p.id === item.id);
+        return liveMatch
+          ? { ...item, is_currently_rented: liveMatch.is_currently_rented ?? item.is_currently_rented, status: liveMatch.status }
+          : item;
+      }),
+    [myItems, liveProducts]
+  );
 
+  const rentedItems = mergedItems.filter((item) => item.is_currently_rented);
+  const activeItemsCount = mergedItems.filter((item) => item.status === "active").length;
   useEffect(() => {
     const loadInitialData = async () => {
       setIsLoading(true);
@@ -160,7 +170,7 @@ export default function ManageItemsPage() {
               <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">جاري جلب البيانات</p>
             </div>
           ) : activeTab === 0 && myItems.length > 0 ? (
-            myItems.map((item) => (
+            mergedItems.map((item) => (
               <MyItemCard
                 key={item.id}
                 product={item}
@@ -188,7 +198,7 @@ export default function ManageItemsPage() {
 
       </main>
 
-      <Footer />
+      
     </div>
   );
 }

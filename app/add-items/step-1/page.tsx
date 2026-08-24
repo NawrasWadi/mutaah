@@ -6,11 +6,14 @@ import { useAddProduct } from "@/context/AddProductContext";
 import { validateAddProductStep1, AddProductStep1Errors } from "@/validations/addProduct.validation";
 import { PRODUCT_CATEGORIES } from "@/types/addProduct";
 import UserDropdown from "@/components/UserDropdown";
+import { useUserProfile } from "@/context/UserProfileContext";
 
 export default function AddProductStep1Page() {
   const router = useRouter();
   const { formData, updateFormData } = useAddProduct();
   const [errors, setErrors] = useState<AddProductStep1Errors>({});
+  const { profile } = useUserProfile();
+  const isVerified = profile.identity_status === "accepted";
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -64,6 +67,22 @@ export default function AddProductStep1Page() {
           </div>
 
           <div className="space-y-4 text-right">
+
+{!isVerified && (
+  <div className="bg-orange-50 border border-orange-100 rounded-xl p-3.5 flex items-center justify-between gap-3">
+    <div className="flex items-center gap-2">
+      <span className="material-symbols-rounded text-orange-500 text-lg">security</span>
+      <p className="text-xs font-bold text-orange-600">لازم توثّق هويتك قبل نشر أي منتج</p>
+    </div>
+    <Link
+      href="/verify-identity?next=/add-items/step-1"
+      className="bg-orange-500 text-white text-xs font-bold px-3.5 py-2 rounded-lg whitespace-nowrap hover:brightness-105 transition-all"
+    >
+      وثّق الآن
+    </Link>
+  </div>
+)}
+
 
             {/* صور المنتج */}
             <div className="space-y-1.5">

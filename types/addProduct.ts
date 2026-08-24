@@ -18,14 +18,4 @@ export interface AddProductStep2Data {
 
 export type AddProductFormData = AddProductStep1Data & AddProductStep2Data;
 
-export const PRODUCT_CATEGORIES = [
-  "تصوير",
-  "إلكترونيات",
-  "أدوات كهربائية",
-  "طاقة ومولدات",
-  "مركبات",
-  "أثاث",
-  "طبي",
-  "ألعاب",
-  "أخرى",
-] as const;
+export { PRODUCT_CATEGORIES } from "@/utils/productCategory";

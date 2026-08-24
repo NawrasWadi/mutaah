@@ -39,10 +39,10 @@ if (!data.identifier.trim()) {
 export const validateRegister = (data: RegisterFormData): RegisterErrors => {
   const errors: RegisterErrors = {};
 
-  if (!data.fullName.trim())
-    errors.fullName = "الاسم الكامل مطلوب";
-  else if (data.fullName.trim().length < 3)
-    errors.fullName = "الاسم يجب أن يكون 3 أحرف على الأقل";
+  if (!data.full_name.trim())
+    errors.full_name = "الاسم الكامل مطلوب";
+  else if (data.full_name.trim().length < 3)
+    errors.full_name = "الاسم يجب أن يكون 3 أحرف على الأقل";
 
   if (!data.username.trim()) {
     errors.username = "اسم المستخدم مطلوب";
@@ -63,8 +63,8 @@ export const validateRegister = (data: RegisterFormData): RegisterErrors => {
   if (!data.governorate)
     errors.governorate = "اختر المحافظة";
 
-  if (!data.area)
-    errors.area = "اختر المنطقة";
+  if (!data.district)
+    errors.district = "اختر المنطقة";
 
   if (!data.password)
     errors.password = "كلمة المرور مطلوبة";

@@ -1,15 +1,12 @@
-import type { Metadata } from "next";
+"use client";
+import { useNotifications } from "@/context/NotificationsContext";
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { mockNotifications } from "@/mock/notifications.mock";
 import UserDropdown from "@/components/UserDropdown";
-export const metadata: Metadata = {
-  title: "الإشعارات — مُتاح",
-  description: "تابع آخر الإشعارات والتحديثات على منصة مُتاح.",
-};
+
 
 export default function NotificationsPage() {
-
+const { notifications, markAllRead } = useNotifications();
   const getIconColor = (color?: "primary" | "orange" | "green") => {
     const colors = {
       orange: "text-orange-500",
@@ -37,12 +34,12 @@ export default function NotificationsPage() {
         <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between p-6 border-b border-gray-50">
             <h1 className="text-base font-black text-gray-800">كل الإشعارات</h1>
-            <button className="text-sm font-bold text-primary hover:underline transition-all">
-              تحديد الكل كمقروء
-            </button>
+            <button onClick={markAllRead} className="text-sm font-bold text-primary hover:underline transition-all">
+  تحديد الكل كمقروء
+</button>
           </div>
           <div className="flex flex-col">
-            {mockNotifications.map((notif) => (
+            {notifications.map((notif) => (
               <div
                 key={notif.id}
                 className={`flex gap-4 p-6 transition-all border-b border-gray-200 last:border-0 hover:bg-gray-50/30 ${!notif.is_read ? "bg-primary/[0.02]" : ""}`}
@@ -75,11 +72,14 @@ export default function NotificationsPage() {
                   )}
 
                   {notif.actionLabel && (
-                    <button className="bg-primary text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:brightness-105 transition-all flex items-center gap-2 mt-4 shadow-lg shadow-primary/10">
-                      <span className="material-symbols-rounded text-sm font-bold">arrow_back</span>
-                      {notif.actionLabel}
-                    </button>
-                  )}
+  <Link
+    href={`/checkout/${notif.ref_id}`}
+    className="bg-primary text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:brightness-105 transition-all flex items-center gap-2 mt-4 shadow-lg shadow-primary/10 w-fit"
+  >
+    <span className="material-symbols-rounded text-sm font-bold">arrow_back</span>
+    {notif.actionLabel}
+  </Link>
+)}
                 </div>
 
                 <div className="text-xs text-gray-300 font-bold whitespace-nowrap pt-1 uppercase">
@@ -90,7 +90,7 @@ export default function NotificationsPage() {
           </div>
         </div>
       </main>
-      <Footer />
+      
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { UserProfile ,UserPlan, UserStats ,FinancialSummary } from "@/types/auth";
 
 export const mockUser: UserProfile = {
+   id: 1,                    
+  password: "123456",
   full_name: "أحمد سالم",
   username: "ahmed_salem",
   email: "ahmed@email.com",

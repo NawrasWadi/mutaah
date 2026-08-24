@@ -51,28 +51,25 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-bg-page">
+  <div className="min-h-screen flex items-center justify-center bg-bg-page p-4">
+    <div className="w-full max-w-2xl h-[600px] max-h-[85vh] bg-white rounded-card shadow-sm border border-gray-100 flex flex-col overflow-hidden">
 
-      {/* الهيدر */}
-     <header className="h-14 flex items-center justify-between px-4 border-b border-gray-100 bg-white sticky top-0 z-50">
-  <button
-    type="button"
-    onClick={() => router.back()}
-    className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary transition-all border border-gray-100"
-  >
-    <span className="material-symbols-rounded text-lg">arrow_forward</span>
-  </button>
+      <header className="h-14 flex items-center justify-between px-4 border-b border-gray-100 bg-white shrink-0">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary transition-all border border-gray-100"
+        >
+          <span className="material-symbols-rounded text-lg">arrow_forward</span>
+        </button>
 
-  <div className="text-xl font-black text-primary italic select-none">مُتاح</div>
+        <div className="text-xl font-black text-primary italic select-none">مُتاح</div>
 
- <UserDropdown align="left" />
- 
-</header>
+        <UserDropdown align="left" />
+      </header>
 
-      {/* منطقة الرسائل */}
       <main ref={scrollRef} className="grow overflow-y-auto p-5 flex flex-col gap-3.5 bg-gray-50">
 
-        {/* رسالة النظام */}
         <div className="text-center">
           <span className="inline-block bg-primary-light text-primary-dark text-xs px-3.5 py-1.5 rounded-full border border-primary/20">
             تم تأكيد الاستئجار — 13 مايو، 10 ص - 1 م
@@ -111,8 +108,7 @@ export default function ChatPage() {
         ))}
       </main>
 
-      {/* حقل الإرسال */}
-      <div className="p-3.5 border-t border-gray-100 bg-white flex items-center gap-2.5">
+      <div className="p-3.5 border-t border-gray-100 bg-white flex items-center gap-2.5 shrink-0">
         <input
           type="text"
           value={draft}
@@ -132,5 +128,6 @@ export default function ChatPage() {
       </div>
 
     </div>
-  );
+  </div>
+);
 }

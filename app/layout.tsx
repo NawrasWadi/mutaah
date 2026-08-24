@@ -3,7 +3,11 @@ import { Cairo, Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import Chatbot from "@/components/Chatbot";
+import Footer from "@/components/Footer";
 import { ProductsProvider } from "@/context/ProductsContext";
+import { UserProfileProvider } from "@/context/UserProfileContext";
+import { NotificationsProvider } from "@/context/NotificationsContext";
+import Providers from "./providers";
 
 const cairo = Cairo({
   subsets: ["arabic"],
@@ -34,11 +38,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
-      <body className={`${cairo.variable} ${plusJakarta.variable} ${materialSymbols.variable} antialiased font-sans bg-slate-50 text-slate-900`}>
-        <ProductsProvider>
-          {children}
-          <Chatbot />
-        </ProductsProvider>
+      <body className={`${cairo.variable} ${plusJakarta.variable} ${materialSymbols.variable} antialiased font-sans bg-slate-50 text-slate-900 flex flex-col min-h-screen`}>
+       <Providers>
+         <ProductsProvider>
+          <UserProfileProvider>
+            <NotificationsProvider>
+              <div className="flex-1 flex flex-col">
+                {children}
+              </div>
+              <Footer />
+              <Chatbot />
+            </NotificationsProvider>
+          </UserProfileProvider>
+         </ProductsProvider>
+       </Providers>
       </body>
     </html>
   );

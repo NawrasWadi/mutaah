@@ -16,6 +16,8 @@ export interface PublicProduct extends BaseProduct {
   governorate: string;
   image_url?: string; // ⭐ جديد — أول صورة حقيقية، اختيارية (fallback للأيقونة لو غير موجودة)
   district: string;
+  is_currently_rented?: boolean; // ⭐ جديد
+
 }
 
 // ===== منتج اليوزر بصفحة "إدارة عناصري" =====
