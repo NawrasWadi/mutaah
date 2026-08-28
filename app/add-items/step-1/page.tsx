@@ -4,17 +4,29 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAddProduct } from "@/context/AddProductContext";
 import { validateAddProductStep1, AddProductStep1Errors } from "@/validations/addProduct.validation";
+import { getCategoryLabel } from "@/utils/productCategory";
 import { PRODUCT_CATEGORIES } from "@/types/addProduct";
 import UserDropdown from "@/components/UserDropdown";
 import { useUserProfile } from "@/context/UserProfileContext";
+import { useQuery } from "@tanstack/react-query";
+import { subscriptionsService } from "@/services/subscriptions.service";
+import { queryKeys } from "@/api/queryKeys";
 
 export default function AddProductStep1Page() {
   const router = useRouter();
   const { formData, updateFormData } = useAddProduct();
   const [errors, setErrors] = useState<AddProductStep1Errors>({});
   const { profile } = useUserProfile();
-  const isVerified = profile.identity_status === "accepted";
+const isVerified = !!profile?.is_verified;
+  const { data: userPlan } = useQuery({
+    queryKey: queryKeys.currentPlan,
+    queryFn: subscriptionsService.getCurrentPlan,
+  });
 
+// ✅ مصححة: استخدام الاستهلاك الحقيقي listings_used_this_month
+// بدل الحقل الثابت القديم الذي كان يعطّل الفحص بصمت
+const reachedListingLimit =
+  !!userPlan && userPlan.listings_used_this_month >= userPlan.max_listings_per_month;
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -72,7 +84,7 @@ export default function AddProductStep1Page() {
   <div className="bg-orange-50 border border-orange-100 rounded-xl p-3.5 flex items-center justify-between gap-3">
     <div className="flex items-center gap-2">
       <span className="material-symbols-rounded text-orange-500 text-lg">security</span>
-      <p className="text-xs font-bold text-orange-600">لازم توثّق هويتك قبل نشر أي منتج</p>
+      <p className="text-xs font-bold text-orange-600">يجب توثيق هويتك قبل نشر أي منتج</p>
     </div>
     <Link
       href="/verify-identity?next=/add-items/step-1"
@@ -82,6 +94,24 @@ export default function AddProductStep1Page() {
     </Link>
   </div>
 )}
+
+{reachedListingLimit && (
+  <div className="bg-red-50 border border-red-100 rounded-xl p-3.5 flex items-center justify-between gap-3">
+    <div className="flex items-center gap-2">
+      <span className="material-symbols-rounded text-red-500 text-lg">block</span>
+      <p className="text-xs font-bold text-red-600">وصلت لحد المنتجات المسموح بإضافتها هذا الشهر</p>
+    </div>
+    <Link
+      href="/subscriptions"
+      className="bg-red-500 text-white text-xs font-bold px-3.5 py-2 rounded-lg whitespace-nowrap hover:brightness-105 transition-all"
+    >
+      ترقية الخطة
+    </Link>
+  </div>
+)}
+
+
+         
 
 
             {/* صور المنتج */}
@@ -142,9 +172,9 @@ export default function AddProductStep1Page() {
                   className="w-full pr-11 pl-10 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none appearance-none cursor-pointer focus:bg-white focus:border-primary transition-all"
                 >
                   <option value="">اختر تصنيفاً</option>
-                  {PRODUCT_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
+                     {PRODUCT_CATEGORIES.map((cat) => (
+                     <option key={cat} value={cat}>{getCategoryLabel(cat)}</option>
+                        ))}
                 </select>
                 <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">expand_more</span>
               </div>
@@ -202,10 +232,11 @@ export default function AddProductStep1Page() {
             </p>
 
             {/* زر التالي */}
-            <button
+                       <button
               type="button"
               onClick={handleNext}
-              className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              disabled={!isVerified || reachedListingLimit}
+              className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               التالي — الوقت والإتاحة
               <span className="material-symbols-rounded text-base">arrow_back</span>

@@ -5,9 +5,9 @@ import { MyProduct } from "@/types/product";
 
 interface MyItemCardProps {
   product: MyProduct;
-  onEdit?: (id: number) => void;
-  onToggleStatus?: (id: number, currentStatus: string) => void;
-  onDelete?: (id: number) => void;
+  onEdit?: (id: string) => void;
+  onToggleStatus?: (id: string, currentStatus: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 export default function MyItemCard({ 

@@ -14,6 +14,7 @@ export interface RegisterFormData {
   full_name: string;
   username: string;
   email: string;
+  phone: string;
   governorate: string;
   district: string;
   password: string;
@@ -25,24 +26,28 @@ export interface RegisterErrors {
   full_name?: string;
   username?: string;
   email?: string;
+  phone?: string;
   governorate?: string;
   district?: string;
   password?: string;
   confirmPassword?: string;
   terms?: string;
 }
- export interface UserProfile {
-  id: number;              // ⭐ جديد — للربط مع owner_id بالمنتجات وتمييز اليوزرز عن بعض
-  password: string;        // ⭐ جديد — للتحقق وقت تسجيل الدخول (نص صريح، مقبول بمرحلة الموك فقط)
+
+export interface UserProfile {
+  id: string;
   full_name: string;
   username: string;
-  email: string; 
-  phone?: string; 
+  email: string;
+  phone: string;
   governorate: string;
   district: string;
-  avatar?: string;
-  identity_status?: "pending" | "accepted" | "rejected";
+  avatar: string | null;
+  is_verified: boolean;
+  subscription_plan: string;
+  stats: UserStats;
 }
+
 export interface ProfileErrors {
   full_name?: string;
   username?: string;
@@ -51,17 +56,29 @@ export interface ProfileErrors {
   governorate?: string;
   district?: string;
 }
-export interface UserStats {
-  products_count: number;
-  rentals_count: number;
-}
 
-export interface FinancialSummary {
-  rental_price_total: number;
-  deposit_amount: number;
+export interface UserStats {
+  my_products_count: number;
+  my_rentals_count: number;
+  rental_earnings: number;
+  held_deposits: number;
 }
 
 export interface UserPlan extends PlanLimits {
-  listings_count_this_month: number;
-  rentals_count_this_month: number;
+  listings_used_this_month: number;
+  rentals_used_this_month: number;
+}
+
+// 🆕 معادة: كانت انحذفت سهواً عند إعادة كتابة UserProfile — لازمة لـ auth.service.ts
+export interface ResetPasswordFormData {
+  email: string;
+  token: string;
+  password: string;
+  password_confirmation: string;
+}
+
+export interface ResetPasswordErrors {
+  password?: string;
+  password_confirmation?: string;
+  general?: string;
 }

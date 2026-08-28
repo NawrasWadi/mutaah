@@ -1,7 +1,7 @@
 import { ProductDetails } from "@/types/product";
 import { PRODUCTS_DATA } from "@/mock/productsData";
 
-export const mockProductDetails: Record<number, ProductDetails> = Object.fromEntries(
+export const mockProductDetails: Record<string, ProductDetails> = Object.fromEntries(
   PRODUCTS_DATA.map((p) => [
     p.id,
     {

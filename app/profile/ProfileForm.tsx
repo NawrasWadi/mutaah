@@ -5,12 +5,13 @@ import { locationData , governorateLabels } from "@/mock/locations";
 import { UserProfile, ProfileErrors } from "@/types/auth";
 import UserDropdown from "@/components/UserDropdown";
 import { validateProfile } from "@/validations/auth.validation";
-import { mockUserStats, mockFinancialSummary, mockUserPlan } from "@/mock/user.mock";
 import { profileService } from "@/services/profile.service";
 import { AxiosError } from "axios";
-import { plans } from "@/mock/plans.data";
+import { useQuery } from "@tanstack/react-query";
+import { subscriptionsService } from "@/services/subscriptions.service";
+import { queryKeys } from "@/api/queryKeys";
 import PlanFeaturesModal from "@/components/PlanFeaturesModal";
-
+import { getPlanDisplayInfo } from "@/utils/planDisplay";
 interface ProfileFormProps {
   initialProfile: UserProfile;
 }
@@ -27,8 +28,17 @@ const [saveError, setSaveError] = useState("");
 const [saveSuccess, setSaveSuccess] = useState(false);
 const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
 
-const currentPlan = plans.find((p) => p.plan_type === mockUserPlan.plan_type);
+const { data: plans } = useQuery({
+  queryKey: queryKeys.plans,
+  queryFn: subscriptionsService.getPlans,
+});
+const { data: userPlan } = useQuery({
+  queryKey: queryKeys.currentPlan,
+  queryFn: subscriptionsService.getCurrentPlan,
+});
 
+
+const currentPlan = plans?.find((p) => p.plan_type === userPlan?.plan_type);
 const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const file = e.target.files?.[0];
   if (file) {
@@ -129,30 +139,22 @@ const handleUpdate = async (e: React.FormEvent) => {
 
               {/* شارة التوثيق */}
 <div className="flex justify-center mb-5 z-10 relative">
-  {formData.identity_status === "accepted" && (
+  {/* ✅ مصححة: approved هي الحالة النهائية الموثّقة (بدل accepted القديمة) */}
+  <div className="flex justify-center mb-5 z-10 relative">
+  {formData.is_verified ? (
     <span className="flex items-center gap-1 text-xs font-black text-primary bg-white px-3 py-1 rounded-full shadow-sm">
       <span className="material-symbols-rounded text-xs">verified</span> موثق
     </span>
-  )}
-
-  {formData.identity_status === "pending" && (
+  ) : (
     <Link
       href="/verify-identity"
-      className="flex items-center gap-1 text-xs font-black text-orange-500 bg-white px-3 py-1 rounded-full shadow-sm hover:bg-orange-50 transition-all"
+      className="flex items-center gap-1.5 text-xs font-black text-gray-500 bg-gray-50 border border-gray-200 px-3.5 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-all"
     >
-      <span className="material-symbols-rounded text-xs">pending</span> قيد المراجعة
+      <span className="material-symbols-rounded text-xs">shield_person</span>
+      غير موثق — وثّق الآن
     </Link>
   )}
-
-  {formData.identity_status === "rejected" && (
-  <Link
-    href="/verify-identity"
-    className="flex items-center gap-1.5 text-xs font-black text-red-500 bg-red-50 border border-red-100 px-3.5 py-1.5 rounded-full shadow-sm hover:bg-red-100 transition-all"
-  >
-    <span className="material-symbols-rounded text-xs">cancel</span>
-    غير موثق — وثّق الآن
-  </Link>
-)}
+</div>
 </div>
 
               {/* قسم الخطة */}
@@ -164,8 +166,7 @@ const handleUpdate = async (e: React.FormEvent) => {
   >
     <span className="text-xs text-white/70 font-bold">نوع الخطة</span>
     <span className="text-xs text-white font-black flex items-center gap-1">
-      {currentPlan?.name ?? mockUserPlan.plan_type}
-      <span className="material-symbols-rounded text-sm">info</span>
+{currentPlan ? getPlanDisplayInfo(currentPlan.plan_type, currentPlan).name : (userPlan?.plan_type ?? "...")}      <span className="material-symbols-rounded text-sm">info</span>
     </span>
   </button>
   <Link href="/subscriptions" className="w-full py-1.5 bg-white text-primary text-xs font-black rounded-lg hover:bg-primary-light transition-all flex items-center justify-center gap-1.5 shadow-md">
@@ -176,12 +177,12 @@ const handleUpdate = async (e: React.FormEvent) => {
               {/* الإحصائيات */}
               <div className="flex items-center justify-center gap-5 py-3 border-t border-white/10 mt-2 z-10 relative">
                 <div className="text-center">
-                  <span className="text-lg font-black text-white leading-none">{mockUserStats.products_count}</span>
+                  <span className="text-lg font-black text-white leading-none">{initialProfile.stats?.my_products_count ?? "—"}</span>
                   <p className="text-xs text-white/70 font-bold uppercase mt-0.5">منتجاتي</p>
                 </div>
                 <div className="w-px h-6 bg-white/20"></div>
                 <div className="text-center">
-                  <span className="text-lg font-black text-white leading-none">{mockUserStats.rentals_count}</span>
+                  <span className="text-lg font-black text-white leading-none">{initialProfile.stats?.my_rentals_count ?? "—"}</span>
                   <p className="text-xs text-white/70 font-bold uppercase mt-0.5">تأجيراتي</p>
                 </div>
               </div>
@@ -195,11 +196,11 @@ const handleUpdate = async (e: React.FormEvent) => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b border-gray-50">
                   <span className="text-xs text-gray-500 font-medium">أرباح التأجير</span>
-                  <span className="text-sm font-black text-primary">₪ {mockFinancialSummary.rental_price_total.toLocaleString()}</span>
+                  <span className="text-sm font-black text-primary">₪ {initialProfile.stats?.rental_earnings.toLocaleString() ?? "—"}</span>
                 </div>
                 <div className="flex justify-between items-center py-2">
                   <span className="text-xs text-gray-500 font-medium">رهانات محتجزة</span>
-                  <span className="text-sm font-black text-orange-500">₪ {mockFinancialSummary.deposit_amount.toLocaleString()}</span>
+                  <span className="text-sm font-black text-orange-500">₪ {initialProfile.stats?.held_deposits.toLocaleString() ?? "—"}</span>
                 </div>
               </div>
             </div>

@@ -2,44 +2,45 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getMyProducts } from "@/services/product.service";
+import { productService } from "@/services/product.service";
 import { MyProduct } from "@/types/product";
 import { useFavorites } from "@/context/FavoritesContext";
-import { useProducts } from "@/context/ProductsContext";
-import { mockProducts } from "@/mock/product";
 import MyItemCard from "@/components/MyItemCard";
 import ProductCard from "@/components/ProductCard";
 import UserDropdown from "@/components/UserDropdown";
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { rentalService } from "@/services/rental.service";
+import { queryKeys } from "@/api/queryKeys";
+import { AxiosError } from "axios";
 
 export default function ManageItemsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(0);
   const [myItems, setMyItems] = useState<MyProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [actionError, setActionError] = useState("");
+  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
 
-  const { favoriteIds, clearFavorites } = useFavorites();
- const { products: liveProducts, updateProductStatus, removeProduct } = useProducts();
-  const favoriteProducts = mockProducts.filter((p) => favoriteIds.includes(p.id));
+  const { data: rentalRequests } = useQuery({
+    queryKey: queryKeys.rentalRequests,
+    queryFn: rentalService.getMyRequests,
+  });
+  const pendingRequestsCount = rentalRequests?.filter((r) => r.owner_status === "pending").length ?? 0;
 
-  const mergedItems = useMemo(
-    () =>
-      myItems.map((item) => {
-        const liveMatch = liveProducts.find((p) => p.id === item.id);
-        return liveMatch
-          ? { ...item, is_currently_rented: liveMatch.is_currently_rented ?? item.is_currently_rented, status: liveMatch.status }
-          : item;
-      }),
-    [myItems, liveProducts]
-  );
+  const { favoriteProducts, clearFavorites } = useFavorites();
 
-  const rentedItems = mergedItems.filter((item) => item.is_currently_rented);
-  const activeItemsCount = mergedItems.filter((item) => item.status === "active").length;
+  // ⚠️ مؤقتاً: بدون دمج مع ProductsContext (الـ Context لسا شغال على mock
+  // ومعرّفاته ما بتطابق معرّفات المنتجات الحقيقية من الـ API، فالدمج كان
+  // بدون أي فائدة فعلية). myItems الآن هو مصدر الحقيقة الوحيد.
+  const rentedItems = myItems.filter((item) => item.is_currently_rented);
+  const activeItemsCount = myItems.filter((item) => item.status === "active").length;
+
   useEffect(() => {
     const loadInitialData = async () => {
       setIsLoading(true);
       try {
-        setMyItems(await getMyProducts());
+        setMyItems(await productService.getMyProducts());
       } catch (error) {
         console.error("Failed to fetch data:", error);
       } finally {
@@ -50,21 +51,49 @@ export default function ManageItemsPage() {
     loadInitialData();
   }, []);
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     router.push(`/my-items/edit/${id}`);
   };
 
-  const handleToggleStatus = (id: number, currentStatus: string) => {
-    const newStatus = currentStatus === "frozen" ? "active" : "frozen";
-    setMyItems((prev) => prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item)));
-    updateProductStatus(id, newStatus);
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    setActionError("");
+    setPendingActionId(id);
+    try {
+      await productService.toggleProductStatus(id);
+      const newStatus = currentStatus === "frozen" ? "active" : "frozen";
+      setMyItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
+      );
+    } catch (error) {
+      const message =
+        error instanceof AxiosError
+          ? error.response?.data?.message
+          : "تعذّر تغيير حالة المنتج";
+      setActionError(message || "تعذّر تغيير حالة المنتج");
+    } finally {
+      setPendingActionId(null);
+    }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     const confirmed = window.confirm("هل أنت متأكد من حذف هذا المنتج؟");
     if (!confirmed) return;
-    setMyItems((prev) => prev.filter((item) => item.id !== id));
-    removeProduct(id);
+
+    setActionError("");
+    setPendingActionId(id);
+    try {
+      await productService.deleteProduct(id);
+      setMyItems((prev) => prev.filter((item) => item.id !== id));
+    } catch (error) {
+      // ⚠️ الباك بيرجع 409 لو في إيجار مقبول حالي/مستقبلي على نفس المنتج
+      const message =
+        error instanceof AxiosError
+          ? error.response?.data?.message
+          : "تعذّر حذف المنتج";
+      setActionError(message || "تعذّر حذف المنتج");
+    } finally {
+      setPendingActionId(null);
+    }
   };
 
   const stats = [
@@ -127,18 +156,24 @@ export default function ManageItemsPage() {
         </div>
 
         {/* تنبيه الطلبات */}
-        <div className="bg-primary/5 border border-primary/10 p-2.5 rounded-xl mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-right">
-            <span className="material-symbols-rounded text-primary text-lg leading-none">pending_actions</span>
-            <span className="text-xs font-black text-primary">2 طلبات بانتظار قرارك</span>
+        {pendingRequestsCount > 0 && (
+          <div className="bg-primary/5 border border-primary/10 p-2.5 rounded-xl mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-right">
+              <span className="material-symbols-rounded text-primary text-lg leading-none">pending_actions</span>
+              <span className="text-xs font-black text-primary">{pendingRequestsCount} طلبات بانتظار قرارك</span>
+            </div>
+            <Link href="/manage-requests" className="text-xs font-bold text-primary hover:underline">
+              عرض الطلبات
+            </Link>
           </div>
-          <Link
-            href="/manage-requests"
-            className="text-primary text-xs font-black hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-all active:scale-95 border border-primary/5"
-          >
-            عرض الطلبات
-          </Link>
-        </div>
+        )}
+
+        {/* رسالة خطأ عامة لأي فعل (حذف/تجميد) فشل */}
+        {actionError && (
+          <div className="bg-red-50 border border-red-100 text-red-500 text-xs font-bold p-2.5 rounded-xl mb-4 text-center">
+            {actionError}
+          </div>
+        )}
 
         {/* عرض المحتوى */}
         <div className="flex flex-col gap-2.5 pb-12">
@@ -170,7 +205,7 @@ export default function ManageItemsPage() {
               <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">جاري جلب البيانات</p>
             </div>
           ) : activeTab === 0 && myItems.length > 0 ? (
-            mergedItems.map((item) => (
+            myItems.map((item) => (
               <MyItemCard
                 key={item.id}
                 product={item}
@@ -198,7 +233,6 @@ export default function ManageItemsPage() {
 
       </main>
 
-      
     </div>
   );
 }

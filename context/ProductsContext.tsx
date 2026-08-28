@@ -6,10 +6,10 @@ import { mockProducts } from "@/mock/product";
 interface ProductsContextType {
   products: PublicProduct[];
   addProduct: (product: PublicProduct) => void;
-  updateProduct: (id: number, updates: Partial<PublicProduct>) => void;
-  updateProductStatus: (id: number, status: PublicProduct["status"]) => void;
-  removeProduct: (id: number) => void;
-  markAsRented: (id: number) => void;
+  updateProduct: (id: string, updates: Partial<PublicProduct>) => void;
+  updateProductStatus: (id: string, status: PublicProduct["status"]) => void;
+  removeProduct: (id: string) => void;
+  markAsRented: (id: string) => void;
 }
 
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined);
@@ -21,18 +21,18 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
     setProducts((prev) => [product, ...prev]);
   };
 
-  const updateProduct = (id: number, updates: Partial<PublicProduct>) => {
+  const updateProduct = (id: string, updates: Partial<PublicProduct>) => {
     setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
   };
 
-  const updateProductStatus = (id: number, status: PublicProduct["status"]) => {
+  const updateProductStatus = (id: string, status: PublicProduct["status"]) => {
     updateProduct(id, { status });
   };
 
-  const removeProduct = (id: number) => {
+  const removeProduct = (id: string) => {
     setProducts((prev) => prev.filter((p) => p.id !== id));
   };
-  const markAsRented = (id: number) => {
+  const markAsRented = (id: string) => {
   updateProduct(id, { is_currently_rented: true });
 };
 

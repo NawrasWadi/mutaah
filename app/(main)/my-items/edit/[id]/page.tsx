@@ -1,57 +1,64 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { mockProductDetails } from "@/mock/productDetails.mock";
-import { useProducts } from "@/context/ProductsContext";
-import { PRODUCT_CATEGORIES, AvailabilityDate } from "@/types/addProduct";
-import { getCategoryIcon } from "@/utils/productCategory";
+import { AxiosError } from "axios";
+import { productService } from "@/services/product.service";
+import { ProductDetails } from "@/types/product";
+import { PRODUCT_CATEGORIES } from "@/types/addProduct";
+import { getCategoryLabel } from "@/utils/productCategory";
 import UserDropdown from "@/components/UserDropdown";
 import HourPeriodSelect from "@/components/HourPeriodSelect";
 import { MONTH_NAMES, DAY_LABELS } from "@/utils/calendar";
-import { TimeValue, isTimeComplete, getAllHours } from "@/utils/time";
+import { TimeValue, isTimeComplete, to24Hour, getAllHours } from "@/utils/time";
 
 type ImageSlot = string | File;
-
 const ALL_HOURS = getAllHours();
 
 export default function EditProductPage() {
   const params = useParams();
   const router = useRouter();
-  const productId = Number(params.id);
+  const productId = params.id as string;
 
-  const { products, updateProduct, updateProductStatus, removeProduct } = useProducts();
-  const contextProduct = products.find((p) => p.id === productId);
-  const detailProduct = mockProductDetails[productId];
+  const [product, setProduct] = useState<ProductDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  // --- الحقول الأساسية (title/category/price مصدرها ProductsContext — هو الحقيقة بالنسبة للداشبورد) ---
-  const [title, setTitle] = useState(contextProduct?.title ?? "");
-  const [category, setCategory] = useState(contextProduct?.category ?? "");
-  const [pricePerHour, setPricePerHour] = useState(String(contextProduct?.price_per_hour ?? ""));
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [pricePerHour, setPricePerHour] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [images, setImages] = useState<ImageSlot[]>([]);
 
-  // --- حقول إضافية (مصدرها mockProductDetails) ---
-  const [description, setDescription] = useState(detailProduct?.description ?? "");
-  const [depositAmount, setDepositAmount] = useState(String(detailProduct?.deposit_amount ?? ""));
-  const [images, setImages] = useState<ImageSlot[]>(detailProduct?.product_images ?? []);
-  const [availableDates] = useState<AvailabilityDate[]>(detailProduct?.available_dates ?? []);
-
-  // --- منطق الكاليندر والساعات (نفس نمط Add Product Step 2) ---
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [isFullDayAvailability, setIsFullDayAvailability] = useState(false);
-  const [sameHoursForAllDays, setSameHoursForAllDays] = useState(false);
   const [sharedStart, setSharedStart] = useState<TimeValue>({ hour: null, period: null });
   const [sharedEnd, setSharedEnd] = useState<TimeValue>({ hour: null, period: null });
-  const [perDaySlots, setPerDaySlots] = useState<Record<string, { start: TimeValue; end: TimeValue }>>({});
 
-  if (!contextProduct || !detailProduct) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400 text-sm">المنتج غير موجود</p>
-      </div>
-    );
-  }
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
-  const availableByDate = new Map(availableDates.map((d) => [d.date, d]));
+  useEffect(() => {
+    const loadProduct = async () => {
+      setIsLoading(true);
+      try {
+        const data = await productService.getProduct(productId);
+        setProduct(data);
+        setTitle(data.title);
+        setCategory(data.category);
+        setDescription(data.description);
+        setPricePerHour(String(data.price_per_hour));
+        setDepositAmount(String(data.deposit_amount));
+        setImages(data.product_images);
+      } catch (error) {
+        setLoadError("تعذّر تحميل بيانات المنتج");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadProduct();
+  }, [productId]);
 
   const year = 2025;
   const monthIndex = 4;
@@ -64,30 +71,13 @@ export default function EditProductPage() {
     calendarCells.push({ day: d, isoDate });
   }
 
-  const toggleSelectDay = (isoDate: string) => {
-    const availability = availableByDate.get(isoDate);
-    if (!availability || availability.is_booked) return;
+  const availableByDate = new Map((product?.available_dates ?? []).map((d) => [d.date, d]));
 
+  const toggleSelectDay = (isoDate: string) => {
     setSelectedDates((prev) =>
       prev.includes(isoDate) ? prev.filter((d) => d !== isoDate) : [...prev, isoDate]
     );
-    setIsFullDayAvailability(false);
-    setSameHoursForAllDays(false);
-    setSharedStart({ hour: null, period: null });
-    setSharedEnd({ hour: null, period: null });
-    setPerDaySlots({});
   };
-
-  const isEditComplete =
-    selectedDates.length > 0 &&
-    (isFullDayAvailability ||
-      (sameHoursForAllDays && isTimeComplete(sharedStart) && isTimeComplete(sharedEnd)) ||
-      (!sameHoursForAllDays &&
-        selectedDates.every(
-          (d) =>
-            isTimeComplete(perDaySlots[d]?.start || { hour: null, period: null }) &&
-            isTimeComplete(perDaySlots[d]?.end || { hour: null, period: null })
-        )));
 
   const handleRemoveImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
@@ -99,34 +89,72 @@ export default function EditProductPage() {
     setImages((prev) => [...prev, file]);
   };
 
-  const handleFreeze = () => {
-    updateProductStatus(productId, "frozen");
+  const handleFreeze = async () => {
+    try {
+      await productService.toggleProductStatus(productId);
+      setProduct((prev) => (prev ? { ...prev, status: prev.status === "frozen" ? "active" : "frozen" } : prev));
+    } catch (error) {
+      console.error("Failed to toggle status:", error);
+    }
   };
 
-  const handleReactivate = () => {
-    updateProductStatus(productId, "active");
-  };
-
-  const handleDelete = () => {
+  const handleDelete = async () => {
     const confirmed = window.confirm("هل أنت متأكد من حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء.");
     if (!confirmed) return;
-    removeProduct(productId);
-    router.push("/dashboard");
+    try {
+      await productService.deleteProduct(productId);
+      router.push("/my-items");
+    } catch (error) {
+      const message =
+        error instanceof AxiosError
+          ? error.response?.data?.message
+          : "تعذّر حذف المنتج";
+      alert(message || "تعذّر حذف المنتج، قد يكون عليه حجز نشط");
+    }
   };
 
-  const handleSave = () => {
-    updateProduct(productId, {
-      title,
-      category,
-      icon: getCategoryIcon(category),
-      price_per_hour: Number(pricePerHour),
-    });
-    router.push("/dashboard");
+  const handleSave = async () => {
+    setSaveError("");
+    setIsSaving(true);
+    try {
+      const newImages = images.filter((img): img is File => img instanceof File);
+      await productService.updateProduct(productId, {
+        title,
+        category,
+        description,
+        price_per_hour: pricePerHour,
+        deposit_amount: depositAmount,
+        images: newImages,
+        available_dates: selectedDates.length > 0 ? selectedDates : undefined,
+        is_all_day: selectedDates.length > 0 ? isFullDayAvailability : undefined,
+      });
+      router.push("/my-items");
+    } catch (error) {
+      const message =
+        error instanceof AxiosError
+          ? error.response?.data?.message
+          : "حدث خطأ أثناء حفظ التعديلات";
+      setSaveError(message || "حدث خطأ أثناء حفظ التعديلات");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const categoryOptions = PRODUCT_CATEGORIES.includes(category as (typeof PRODUCT_CATEGORIES)[number])
-    ? PRODUCT_CATEGORIES
-    : [category, ...PRODUCT_CATEGORIES];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (loadError || !product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-400 text-sm">{loadError || "المنتج غير موجود"}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-bg-page">
@@ -145,34 +173,16 @@ export default function EditProductPage() {
       <main className="grow flex items-center justify-center p-4">
         <div className="bg-white w-full max-w-xl rounded-card p-5 md:p-6 shadow-sm border border-gray-100">
 
-          {/* أزرار الحالة */}
           <div className="flex items-center justify-end gap-2 mb-5 pb-4 border-b border-gray-100">
             <button
               type="button"
-              onClick={handleReactivate}
-              disabled={contextProduct.status === "active"}
-              className={`text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 border transition-all ${
-                contextProduct.status === "active"
-                  ? "border-green-200 text-green-600 bg-green-50 cursor-default"
-                  : "border-gray-200 text-gray-400 hover:border-green-300 hover:text-green-600"
-              }`}
-            >
-              <span className="material-symbols-rounded text-sm">check_circle</span>
-              منشور
-            </button>
-
-            <button
-              type="button"
               onClick={handleFreeze}
-              disabled={contextProduct.status === "frozen"}
-              className={`text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 border transition-all ${
-                contextProduct.status === "frozen"
-                  ? "border-orange-200 text-orange-500 bg-orange-50 cursor-default"
-                  : "border-gray-200 text-gray-400 hover:border-orange-300 hover:text-orange-500"
-              }`}
+              className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 border border-gray-200 text-gray-500 hover:border-orange-300 hover:text-orange-500 transition-all"
             >
-              <span className="material-symbols-rounded text-sm">pause_circle</span>
-              تجميد
+              <span className="material-symbols-rounded text-sm">
+                {product.status === "frozen" ? "play_arrow" : "pause_circle"}
+              </span>
+              {product.status === "frozen" ? "إعادة تفعيل" : "تجميد"}
             </button>
 
             <button
@@ -242,8 +252,8 @@ export default function EditProductPage() {
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full pr-11 pl-10 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none appearance-none cursor-pointer focus:bg-white focus:border-primary transition-all"
                 >
-                  {categoryOptions.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  {PRODUCT_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{getCategoryLabel(cat)}</option>
                   ))}
                 </select>
                 <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">expand_more</span>
@@ -287,27 +297,21 @@ export default function EditProductPage() {
                     className="w-full pr-11 pl-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:bg-white focus:border-primary transition-all"
                   />
                 </div>
-                <p className="text-xs text-gray-400 flex items-center gap-1">
-                  <span className="material-symbols-rounded text-primary text-xs">info</span>
-                  محجوز حتى استرداد المنتج
-                </p>
               </div>
             </div>
 
             <div className="h-px bg-gray-100"></div>
 
-            {/* الكاليندر */}
+            {/* الكاليندر — تحديث الأيام المتاحة (اختياري) */}
             <div className="space-y-1.5">
               <label className="flex items-center gap-1 text-xs font-bold text-gray-500">
                 <span className="material-symbols-rounded text-primary text-sm">calendar_today</span>
-                الأيام المتاحة
+                تحديث الأيام المتاحة (اختياري — اتركها فارغة للإبقاء على الحالي)
               </label>
 
               <div className="border border-gray-100 rounded-xl p-3">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="material-symbols-rounded text-gray-400 text-base">chevron_right</span>
                   <span className="text-xs font-bold text-gray-800">{MONTH_NAMES[monthIndex]} {year}</span>
-                  <span className="material-symbols-rounded text-gray-400 text-base">chevron_left</span>
                 </div>
 
                 <div className="grid grid-cols-7 gap-1 mb-2">
@@ -319,51 +323,31 @@ export default function EditProductPage() {
                 <div className="grid grid-cols-7 gap-1">
                   {Array.from({ length: firstDayOffset }).map((_, i) => <div key={`empty-${i}`}></div>)}
                   {calendarCells.map(({ day, isoDate }) => {
-                    const availability = availableByDate.get(isoDate);
-                    const isBooked = !!availability?.is_booked;
                     const isSelected = selectedDates.includes(isoDate);
-                    const isClickable = !!availability && !availability.is_booked;
-
-                    let cellClass = "text-gray-300 cursor-not-allowed";
-                    if (isSelected) cellClass = "bg-primary text-white";
-                    else if (isBooked) cellClass = "bg-gray-100 text-gray-400 line-through cursor-not-allowed";
-                    else if (isClickable) cellClass = "bg-primary-light text-gray-700 hover:bg-primary/20";
-
                     return (
                       <button
                         key={isoDate}
                         type="button"
-                        disabled={!isClickable}
                         onClick={() => toggleSelectDay(isoDate)}
-                        className={`aspect-square rounded-full text-xs font-bold transition-all ${cellClass}`}
+                        className={`aspect-square rounded-full text-xs font-bold transition-all ${
+                          isSelected ? "bg-primary text-white" : "bg-primary-light text-gray-700 hover:bg-primary/20"
+                        }`}
                       >
                         {day}
                       </button>
                     );
                   })}
                 </div>
-
-                <div className="flex items-center gap-3 mt-3 text-xs text-gray-400 flex-wrap">
-                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-primary-light border border-primary"></span> متاح للتعديل</span>
-                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-primary"></span> مختار</span>
-                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-white border border-gray-200"></span> غير مضاف</span>
-                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gray-200"></span> مؤجر</span>
-                </div>
               </div>
             </div>
 
-            {/* خيارات تعديل الساعات */}
             {selectedDates.length > 0 && (
               <div className="space-y-3 border-t border-gray-100 pt-3">
-
                 <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-100 rounded-xl p-3">
                   <input
                     type="checkbox"
                     checked={isFullDayAvailability}
-                    onChange={(e) => {
-                      setIsFullDayAvailability(e.target.checked);
-                      setSameHoursForAllDays(false);
-                    }}
+                    onChange={(e) => setIsFullDayAvailability(e.target.checked)}
                     className="w-4 h-4 accent-primary"
                   />
                   <span className="text-xs font-bold text-gray-700">متاح خلال جميع ساعات الأيام المختارة (24 ساعة)</span>
@@ -376,49 +360,12 @@ export default function EditProductPage() {
 
                     <p className="text-xs text-gray-400 font-bold">إلى الساعة</p>
                     <HourPeriodSelect value={sharedEnd} onChange={setSharedEnd} allowedHours={ALL_HOURS} />
-
-                    <label className="flex items-center gap-2 cursor-pointer pt-2 border-t border-gray-100">
-                      <input
-                        type="checkbox"
-                        checked={sameHoursForAllDays}
-                        onChange={(e) => setSameHoursForAllDays(e.target.checked)}
-                        disabled={!isTimeComplete(sharedStart) || !isTimeComplete(sharedEnd)}
-                        className="w-4 h-4 accent-primary"
-                      />
-                      <span className="text-xs font-bold text-gray-700">تطبيق هذه الساعات على كل الأيام المختارة</span>
-                    </label>
-                  </div>
-                )}
-
-                {!isFullDayAvailability && !sameHoursForAllDays && (
-                  <div className="space-y-2 pt-2 border-t border-gray-100">
-                    <p className="text-xs font-bold text-gray-700">أو حدد ساعات كل يوم على حدة:</p>
-                    {selectedDates.map((date) => {
-                      const daySlot = perDaySlots[date] || { start: { hour: null, period: null }, end: { hour: null, period: null } };
-                      return (
-                        <div key={date} className="border border-gray-100 rounded-lg p-2.5 space-y-2">
-                          <p className="text-xs font-bold text-gray-700">{date}</p>
-
-                          <p className="text-xs text-gray-400 font-bold">من الساعة</p>
-                          <HourPeriodSelect
-                            value={daySlot.start}
-                            onChange={(val) => setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, start: val } }))}
-                            allowedHours={ALL_HOURS}
-                          />
-
-                          <p className="text-xs text-gray-400 font-bold">إلى الساعة</p>
-                          <HourPeriodSelect
-                            value={daySlot.end}
-                            onChange={(val) => setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, end: val } }))}
-                            allowedHours={ALL_HOURS}
-                          />
-                        </div>
-                      );
-                    })}
                   </div>
                 )}
               </div>
             )}
+
+            {saveError && <p className="text-red-500 text-xs text-center font-bold">{saveError}</p>}
 
             {/* الأزرار */}
             <div className="flex gap-3 pt-2">
@@ -432,10 +379,11 @@ export default function EditProductPage() {
               <button
                 type="button"
                 onClick={handleSave}
-                className="flex-[2] py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                disabled={isSaving}
+                className="flex-[2] py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <span className="material-symbols-rounded text-base">save</span>
-                حفظ التعديلات
+                {isSaving ? "جارِ الحفظ..." : "حفظ التعديلات"}
               </button>
             </div>
 
@@ -445,3 +393,55 @@ export default function EditProductPage() {
     </div>
   );
 }
+/* ============================================================
+   🗄️ مرجع معطّل — ميزة "ساعات مختلفة لكل يوم على حدة"
+   غير مدعومة من الـ API حالياً (start_time/end_time حقلين وحيدين
+   لكل الطلب، مش لكل يوم). محفوظة هون لو الباك ضاف الدعم مستقبلاً.
+   ============================================================
+
+const [sameHoursForAllDays, setSameHoursForAllDays] = useState(false);
+const [perDaySlots, setPerDaySlots] = useState<Record<string, { start: TimeValue; end: TimeValue }>>({});
+
+// داخل toggleSelectDay، كان فيه أيضاً:
+// setSameHoursForAllDays(false);
+// setPerDaySlots({});
+
+// شرط الإكمال القديم:
+// const isAvailabilityComplete =
+//   selectedDates.length > 0 &&
+//   (isFullDayAvailability ||
+//     (sameHoursForAllDays && isTimeComplete(sharedStart) && isTimeComplete(sharedEnd)) ||
+//     (!sameHoursForAllDays &&
+//       selectedDates.every(
+//         (d) =>
+//           isTimeComplete(perDaySlots[d]?.start || { hour: null, period: null }) &&
+//           isTimeComplete(perDaySlots[d]?.end || { hour: null, period: null })
+//       )));
+
+// الـ JSX القديم لتحديد ساعات كل يوم لحاله:
+// {!isFullDayAvailability && !sameHoursForAllDays && (
+//   <div className="space-y-2 pt-2 border-t border-gray-100">
+//     <p className="text-xs font-bold text-gray-700">أو حدد ساعات كل يوم على حدة:</p>
+//     {selectedDates.map((date) => {
+//       const daySlot = perDaySlots[date] || { start: { hour: null, period: null }, end: { hour: null, period: null } };
+//       return (
+//         <div key={date} className="border border-gray-100 rounded-lg p-2.5 space-y-2">
+//           <p className="text-xs font-bold text-gray-700">{date}</p>
+//           <p className="text-xs text-gray-400 font-bold">من الساعة</p>
+//           <HourPeriodSelect
+//             value={daySlot.start}
+//             onChange={(val) => setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, start: val } }))}
+//             allowedHours={ALL_HOURS}
+//           />
+//           <p className="text-xs text-gray-400 font-bold">إلى الساعة</p>
+//           <HourPeriodSelect
+//             value={daySlot.end}
+//             onChange={(val) => setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, end: val } }))}
+//             allowedHours={ALL_HOURS}
+//           />
+//         </div>
+//       );
+//     })}
+//   </div>
+// )}
+============================================================ */

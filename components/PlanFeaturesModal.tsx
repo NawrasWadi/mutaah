@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { Plan } from "@/types/subscriptions";
+import { getPlanDisplayInfo, formatPlanPrice } from "@/utils/planDisplay";
 
 interface PlanFeaturesModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface PlanFeaturesModalProps {
 
 export default function PlanFeaturesModal({ isOpen, onClose, plan }: PlanFeaturesModalProps) {
   if (!isOpen) return null;
+const display = getPlanDisplayInfo(plan.plan_type, plan);
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-primary/10 backdrop-blur-sm animate-in fade-in duration-300">
@@ -25,15 +27,14 @@ export default function PlanFeaturesModal({ isOpen, onClose, plan }: PlanFeature
         </button>
 
         <div className="text-center mb-6">
-          <h2 className="text-lg font-black text-gray-800 mb-1">خطة {plan.name}</h2>
-          <p className="text-gray-400 text-xs">
-            {plan.price === "مجاناً" ? "مجاناً" : `₪${plan.price} ${plan.unit}`}
-          </p>
+          <h2 className="text-lg font-black text-gray-800 mb-1">خطة {display.name}</h2>
+<p className="text-gray-400 text-xs">
+  {formatPlanPrice(plan.price) === "مجاناً" ? "مجاناً" : `₪${formatPlanPrice(plan.price)} ${display.unit}`}
+</p>
         </div>
 
         <ul className="space-y-3 mb-6">
-          {plan.features.map((feature, i) => (
-            <li key={i} className="flex items-center gap-2 text-xs font-medium">
+{display.features.map((feature, i) => (            <li key={i} className="flex items-center gap-2 text-xs font-medium">
               <span className={`material-symbols-rounded text-base ${feature.active ? "text-primary" : "text-gray-300"}`}>
                 {feature.active ? "check_circle" : "cancel"}
               </span>

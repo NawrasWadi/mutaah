@@ -1,30 +1,34 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import UserDropdown from "@/components/UserDropdown";
-import { useSearchParams } from "next/navigation";
-import { useUserProfile } from "@/context/UserProfileContext";
-import { mockSubmitVerification } from "@/mock/verificationResult.mock";
-import {
-  VerificationErrorReason,
-  AffectedImage,
-  VERIFICATION_ERROR_MESSAGES,
-  ERROR_TO_AFFECTED_IMAGE,
-} from "@/types/verification";
-
-type PageState = "form" | "processing" | "accepted" | "pending" | "rejected";
+import { verificationService } from "@/services/verification.service";
+import { queryKeys } from "@/api/queryKeys";
+import { IdentityVerificationStatus } from "@/types/verification";
 
 export default function VerifyIdentityPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") || "/profile";
-  const { updateIdentityStatus } = useUserProfile();
-  const [pageState, setPageState] = useState<PageState>("form");
+  const queryClient = useQueryClient();
 
   const [idImage, setIdImage] = useState<File | null>(null);
   const [selfieImage, setSelfieImage] = useState<File | null>(null);
-  const [errorReason, setErrorReason] = useState<VerificationErrorReason | null>(null);
+
+  // التحقق من وجود طلب توثيق سابق عند فتح الصفحة — لم يكن موجوداً بالنسخة القديمة
+  const { data: currentVerification, isLoading: isCheckingCurrent } = useQuery({
+    queryKey: queryKeys.verification,
+    queryFn: verificationService.getCurrent,
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: () => verificationService.submit(idImage!, selfieImage!),
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.verification, data);
+    },
+  });
 
   const handleImageChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -36,39 +40,32 @@ export default function VerifyIdentityPage() {
     else setSelfieImage(file);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!idImage || !selfieImage) return;
-    setPageState("processing");
-
-    const result = await mockSubmitVerification();
-
-    if (result.status === "accepted") {
-      setPageState("accepted");
-       updateIdentityStatus("accepted");
-       setPageState("accepted");
-    } else if (result.status === "pending") {
-      setPageState("pending");
-    } else if (result.status === "rejected" && result.error_status) {
-      setErrorReason(result.error_status);
-      setPageState("rejected");
-    }
+    submitMutation.mutate();
   };
 
+  // إعادة المحاولة بعد رفض — رفع الصورتين من جديد بالكامل
+  // (لا يوجد "سبب رفض" مصنّف لتحديد صورة واحدة بعينها، خلافاً للنظام القديم)
   const handleRetry = () => {
-    if (!errorReason) return;
-    const affected: AffectedImage = ERROR_TO_AFFECTED_IMAGE[errorReason];
-
-    if (affected === "id_image" || affected === "both") setIdImage(null);
-    if (affected === "selfie_image" || affected === "both") setSelfieImage(null);
-
-    setErrorReason(null);
-    setPageState("form");
+    setIdImage(null);
+    setSelfieImage(null);
+    queryClient.setQueryData(queryKeys.verification, null);
   };
+
+  const status: IdentityVerificationStatus | null =
+    currentVerification?.status ?? null;
+
+  if (isCheckingCurrent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-bg-page">
-
-      {/* الهيدر */}
       <header className="h-14 flex items-center justify-between px-6 border-b border-gray-100 bg-white sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <Link href="/profile" className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary transition-all border border-gray-100">
@@ -83,16 +80,28 @@ export default function VerifyIdentityPage() {
       <main className="grow flex items-center justify-center p-4">
         <div className="bg-white w-full max-w-md rounded-card p-6 md:p-8 shadow-sm border border-gray-100">
 
-          {/* ===== حالة: نموذج رفع الصور ===== */}
-          {pageState === "form" && (
+          {/* ===== لا يوجد طلب سابق أو تم رفضه → عرض الفورم ===== */}
+          {(!status || status === "rejected") && (
             <div className="text-right space-y-5">
-
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-lg font-black text-gray-800 flex items-center gap-2">
                   <span className="material-symbols-rounded text-primary text-xl">shield_person</span>
                   أثبت هويتك
                 </h2>
               </div>
+
+              {status === "rejected" && (
+                <div className="bg-red-50 border border-red-100 rounded-xl p-3.5 flex gap-2.5">
+                  <span className="material-symbols-rounded text-red-500 text-lg shrink-0">cancel</span>
+                  <div>
+                    <p className="text-xs font-bold text-red-600 mb-1">تم رفض طلبك السابق</p>
+                    {/* ⚠️ admin_note غير مؤكد وجوده بالرد — عرض احتياطي فقط */}
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      {currentVerification?.admin_note || "يرجى إعادة رفع صور واضحة والمحاولة مجدداً"}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="bg-orange-50 border border-orange-100 rounded-xl p-3.5 flex gap-2.5">
                 <span className="material-symbols-rounded text-orange-500 text-lg shrink-0">security</span>
@@ -105,8 +114,6 @@ export default function VerifyIdentityPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-
-                {/* صورة الهوية */}
                 <label className="border-2 border-dashed border-primary bg-primary-light rounded-section p-4 flex flex-col items-center gap-2 cursor-pointer">
                   {idImage ? (
                     <img src={URL.createObjectURL(idImage)} alt="صورة الهوية" className="w-full h-16 object-cover rounded-lg" />
@@ -120,7 +127,6 @@ export default function VerifyIdentityPage() {
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, "id")} />
                 </label>
 
-                {/* صورة شخصية */}
                 <label className="border-2 border-dashed border-gray-200 bg-gray-50 rounded-section p-4 flex flex-col items-center gap-2 cursor-pointer">
                   {selfieImage ? (
                     <img src={URL.createObjectURL(selfieImage)} alt="صورة شخصية" className="w-full h-16 object-cover rounded-lg" />
@@ -133,56 +139,35 @@ export default function VerifyIdentityPage() {
                   <span className="text-xs text-gray-400 text-center">صورة سيلفي واضحة</span>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageChange(e, "selfie")} />
                 </label>
-
               </div>
+
+              {submitMutation.isError && (
+                <p className="text-xs text-red-500 font-bold">
+                  حدث خطأ أثناء الإرسال، يرجى المحاولة مجدداً
+                </p>
+              )}
 
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={!idImage || !selfieImage}
+                disabled={!idImage || !selfieImage || submitMutation.isPending}
                 className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span className="material-symbols-rounded text-lg">verified_user</span>
-                إرسال للتوثيق
+                {submitMutation.isPending ? "جارِ الإرسال..." : "إرسال للتوثيق"}
               </button>
             </div>
           )}
 
-          {/* ===== حالة: قيد المعالجة ===== */}
-          {pageState === "processing" && (
-            <div className="text-center py-8 flex flex-col items-center gap-4">
-              <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-sm font-bold text-gray-600">جاري معالجة طلبك...</p>
-              <p className="text-xs text-gray-400">قد يستغرق هذا بضع لحظات</p>
-            </div>
-          )}
-
-          {/* ===== حالة: مقبول ===== */}
-          {pageState === "accepted" && (
-            <div className="text-center py-4">
-              <div className="w-16 h-16 rounded-full bg-primary-light flex items-center justify-center mx-auto mb-4">
-                <span className="material-symbols-rounded text-primary text-3xl">verified</span>
-              </div>
-              <h2 className="text-lg font-black text-gray-800 mb-2">تم توثيق هويتك بنجاح</h2>
-              <p className="text-xs text-gray-500 mb-6">يمكنك الآن إضافة منتجات واستئجارها بكل أمان.</p>
-              <button
-                type="button"
-                  onClick={() => router.push(nextPath)}                className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all"
-              >
-                متابعة
-              </button>
-            </div>
-          )}
-
-          {/* ===== حالة: قيد المراجعة اليدوية ===== */}
-          {pageState === "pending" && (
+          {/* ===== قيد المراجعة اليدوية ===== */}
+          {status === "manual_review" && (
             <div className="text-center py-4">
               <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-4">
                 <span className="material-symbols-rounded text-orange-500 text-3xl">pending_actions</span>
               </div>
               <h2 className="text-lg font-black text-gray-800 mb-2">طلبك قيد المراجعة</h2>
               <p className="text-xs text-gray-500 mb-6 leading-relaxed">
-                لم نتمكن من التأكد التلقائي من هويتك، طلبك الآن قيد المراجعة اليدوية وسيتم إعلامك بالنتيجة خلال 24 ساعة.
+                طلبك الآن قيد المراجعة اليدوية من الإدارة وسيتم إعلامك بالنتيجة قريباً.
               </p>
               <button
                 type="button"
@@ -194,22 +179,41 @@ export default function VerifyIdentityPage() {
             </div>
           )}
 
-          {/* ===== حالة: مرفوض ===== */}
-          {pageState === "rejected" && errorReason && (
+          {/* ===== verified — ⚠️ حالة منفصلة بانتظار توضيح الفرق عن approved من رامي ===== */}
+          {status === "verified" && (
             <div className="text-center py-4">
-              <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
-                <span className="material-symbols-rounded text-red-500 text-3xl">cancel</span>
+              <div className="w-16 h-16 rounded-full bg-primary-light flex items-center justify-center mx-auto mb-4">
+                <span className="material-symbols-rounded text-primary text-3xl">verified</span>
               </div>
-              <h2 className="text-lg font-black text-gray-800 mb-2">تم رفض طلب التوثيق</h2>
-              <p className="text-xs text-red-500 font-bold mb-6 leading-relaxed bg-red-50 rounded-xl p-3">
-                {VERIFICATION_ERROR_MESSAGES[errorReason]}
+              <h2 className="text-lg font-black text-gray-800 mb-2">تم التحقق من هويتك</h2>
+              <p className="text-xs text-gray-500 mb-6">
+                {/* ⚠️ نص مؤقت — غير مؤكد شو الفرق العملي عن "approved" بالنسبة للمستخدم */}
+                هويتك قيد الاعتماد النهائي حالياً.
               </p>
               <button
                 type="button"
-                onClick={handleRetry}
+                onClick={() => router.push(nextPath)}
                 className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all"
               >
-                إعادة المحاولة
+                متابعة
+              </button>
+            </div>
+          )}
+
+          {/* ===== approved — الحالة النهائية المفترضة ===== */}
+          {status === "approved" && (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 rounded-full bg-primary-light flex items-center justify-center mx-auto mb-4">
+                <span className="material-symbols-rounded text-primary text-3xl">verified</span>
+              </div>
+              <h2 className="text-lg font-black text-gray-800 mb-2">تم توثيق هويتك بنجاح</h2>
+              <p className="text-xs text-gray-500 mb-6">يمكنك الآن إضافة منتجات واستئجارها بكل أمان.</p>
+              <button
+                type="button"
+                onClick={() => router.push(nextPath)}
+                className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all"
+              >
+                متابعة
               </button>
             </div>
           )}

@@ -30,8 +30,9 @@ export default function LoginPage() {
   setIsSubmitting(true);
   try {
     const res = await authService.login(formData);
-    tokenStorage.setToken(res.access_token);
-    router.push("/dashboard");
+   tokenStorage.setToken(res.access_token);
+tokenStorage.setRole(res.user.role);
+router.push(res.user.role === "admin" ? "/admin/dashboard" : "/dashboard");
   } catch (error) {
     const message =
       error instanceof AxiosError

@@ -1,127 +1,91 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { mockProductDetails } from "@/mock/productDetails.mock";
+import { useParams, useRouter } from "next/navigation";
+import { AxiosError } from "axios";
+import { productService } from "@/services/product.service";
+import { rentalService } from "@/services/rental.service";
+import { ProductDetails } from "@/types/product";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useUserProfile } from "@/context/UserProfileContext";
 import UserDropdown from "@/components/UserDropdown";
 import HourPeriodSelect from "@/components/HourPeriodSelect";
 import { MONTH_NAMES, DAY_LABELS } from "@/utils/calendar";
-import { TimeValue, HOUR_NUMBERS, PERIODS, from24Hour, isTimeComplete } from "@/utils/time";
-import { useRouter } from "next/navigation";
-import { useUserProfile } from "@/context/UserProfileContext";
-import { useNotifications } from "@/context/NotificationsContext";
+import { TimeValue, isTimeComplete, to24Hour, from24Hour, getAllHours } from "@/utils/time";
+import { getCategoryLabel } from "@/utils/productCategory";
 import RentalRequestModal from "@/components/RentalRequestModal";
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const productId = Number(params.id);
-  const product = mockProductDetails[productId];
-  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-  const { toggleFavorite, isFavorite } = useFavorites();
+  const productId = params.id as string;
   const router = useRouter();
+
+  const { toggleFavorite, isFavorite } = useFavorites();
   const { profile } = useUserProfile();
-  const { addNotification } = useNotifications();
-  const isVerified = profile.identity_status === "accepted";
+  // ⚠️ "approved" افتراض مؤقت (نفس الملاحظة المعلّقة من موديول verify-identity)
+  // بانتظار تأكيد رامي: هل الحالة النهائية "verified" أو "approved" أو الاثنين
+// ✅ مصححة نهائياً: is_verified boolean بسيط من GET /profile الفعلي،
+// مش enum identity_status (الذي لا وجود له إطلاقاً بهذا الـ endpoint)
+const isVerified = !!profile?.is_verified;
+  const [product, setProduct] = useState<ProductDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [activeImage, setActiveImage] = useState(0);
 
-  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isFullDayBooking, setIsFullDayBooking] = useState(false);
-  const [sameHoursForAllDays, setSameHoursForAllDays] = useState(false);
+  const [startTime, setStartTime] = useState<TimeValue>({ hour: null, period: null });
+  const [endTime, setEndTime] = useState<TimeValue>({ hour: null, period: null });
 
-  const [sharedStart, setSharedStart] = useState<TimeValue>({ hour: null, period: null });
-  const [sharedEnd, setSharedEnd] = useState<TimeValue>({ hour: null, period: null });
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  const [perDaySlots, setPerDaySlots] = useState<Record<string, { start: TimeValue; end: TimeValue }>>({});
+  useEffect(() => {
+    const loadProduct = async () => {
+      setIsLoading(true);
+      try {
+        const data = await productService.getProduct(productId);
+        setProduct(data);
+      } catch (error) {
+        setLoadError("تعذّر تحميل بيانات المنتج");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadProduct();
+  }, [productId]);
 
-  if (!product) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400 text-sm">المنتج غير موجود</p>
-      </div>
-    );
-  }
+  // ✅ مصححة: available_dates array من نصوص تواريخ بسيطة، مش objects.
+  // نستخدم Set للبحث السريع بدل Map (ما في بيانات إضافية لكل تاريخ الآن).
+  const availableDatesSet = new Set(product?.available_dates ?? []);
 
-  const availableByDate = new Map(product.available_dates.map((d) => [d.date, d]));
+  // ⚠️ قرار مؤقت: لا يوجد حقل "is_booked" بالـ API حالياً — كل تاريخ
+  // موجود بـ available_dates يُعرض كمتاح بالكامل، بدون استثناء التواريخ
+  // المحجوزة فعلياً عبر rental-requests مقبولة. يحتاج قرار لاحق: إما
+  // مقارنة يدوية مع rental-requests، أو انتظار حقل إضافي من رامي.
 
-  // كل ساعة-فترة مسموحة ضمن تقاطع الأيام المختارة (لـ "نفس الساعات لكل الأيام")
-  const intersectionAllowedHours = useMemo(() => {
-    if (selectedDates.length === 0) return [];
-  const ranges = selectedDates
-      .map((date) => availableByDate.get(date))
-      .filter((d) => d && !d.is_all_day) as { start_time: string; end_time: string }[];
+  // ✅ الآن حقل واحد على مستوى المنتج كامل، مش لكل يوم لحاله
+  const isAllDay = !!product?.is_all_day;
 
-    if (ranges.length === 0) {
-      // كل الأيام 24 ساعة، كل الساعات مسموحة
-      return HOUR_NUMBERS.flatMap((h) => PERIODS.map((p) => ({ hour: h, period: p.value as "ص" | "م" })));
-    }
-
-  const latestStart = ranges.reduce((max, r) => (r.start_time > max ? r.start_time : max), "00:00");
-  const earliestEnd = ranges.reduce((min, r) => (r.end_time < min ? r.end_time : min), "23:59");
-
-    if (latestStart >= earliestEnd) return [];
-
-  const result: { hour: number; period: "ص" | "م" }[] = [];
+  // ✅ نطاق الساعات المسموحة محسوب من start_time/end_time الخاصين
+  // بالمنتج كامل (مش لكل يوم)، بدل ALL_HOURS الثابتة سابقاً
+  const allowedHours = (() => {
+    if (!product || isAllDay) return getAllHours();
+    const result: { hour: number; period: "ص" | "م" }[] = [];
     for (let h = 0; h < 24; h++) {
-  const time24 = `${String(h).padStart(2, "0")}:00`;
-      if (time24 >= latestStart && time24 <= earliestEnd) {
+      const time24 = `${String(h).padStart(2, "0")}:00`;
+      if (time24 >= product.start_time && time24 <= product.end_time) {
         result.push(from24Hour(time24));
       }
     }
     return result;
-  }, [selectedDates]);
+  })();
 
-  const hasTimeConflict = selectedDates.length > 1 && intersectionAllowedHours.length === 0;
-  const allSelectedDaysAreFullDay = selectedDates.every((d) => availableByDate.get(d)?.is_all_day);
+  const today = new Date();
+const year = today.getFullYear();
+const monthIndex = today.getMonth();
 
-  const getAllowedHoursForDay = (date: string) => {
-  const availability = availableByDate.get(date);
-    if (!availability || availability.is_all_day) {
-      return HOUR_NUMBERS.flatMap((h) => PERIODS.map((p) => ({ hour: h, period: p.value as "ص" | "م" })));
-    }
-  const result: { hour: number; period: "ص" | "م" }[] = [];
-    for (let h = 0; h < 24; h++) {
-  const time24 = `${String(h).padStart(2, "0")}:00`;
-      if (time24 >= availability.start_time && time24 <= availability.end_time) {
-        result.push(from24Hour(time24));
-      }
-    }
-    return result;
-  };
-
-  const handlePrevImage = () => setActiveImage((prev) => (prev === 0 ? product.product_images.length - 1 : prev - 1));
-  const handleNextImage = () => setActiveImage((prev) => (prev === product.product_images.length - 1 ? 0 : prev + 1));
-
-  const toggleSelectDay = (isoDate: string) => {
-  const availability = availableByDate.get(isoDate);
-    if (!availability || availability.is_booked) return;
-
-    setSelectedDates((prev) =>
-      prev.includes(isoDate) ? prev.filter((d) => d !== isoDate) : [...prev, isoDate]
-    );
-    setIsFullDayBooking(false);
-    setSameHoursForAllDays(false);
-    setSharedStart({ hour: null, period: null });
-    setSharedEnd({ hour: null, period: null });
-    setPerDaySlots({});
-  };
-
-
-  const isBookingComplete =
-    selectedDates.length > 0 &&
-    (isFullDayBooking ||
-      allSelectedDaysAreFullDay ||
-      (sameHoursForAllDays && isTimeComplete(sharedStart) && isTimeComplete(sharedEnd)) ||
-      (!sameHoursForAllDays &&
-        selectedDates.every(
-          (d) =>
-            availableByDate.get(d)?.is_all_day ||
-            (isTimeComplete(perDaySlots[d]?.start || { hour: null, period: null }) &&
-              isTimeComplete(perDaySlots[d]?.end || { hour: null, period: null }))
-        )));
-
-  const year = 2025;
-  const monthIndex = 4;
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const firstDayOffset = new Date(year, monthIndex, 1).getDay();
 
@@ -131,16 +95,80 @@ export default function ProductDetailPage() {
     calendarCells.push({ day: d, isoDate });
   }
 
+  const selectDay = (isoDate: string) => {
+    if (!availableDatesSet.has(isoDate)) return;
+    setSelectedDate((prev) => (prev === isoDate ? null : isoDate));
+    setIsFullDayBooking(false);
+    setStartTime({ hour: null, period: null });
+    setEndTime({ hour: null, period: null });
+  };
+
+  const isBookingComplete =
+    !!selectedDate &&
+    (isFullDayBooking || isAllDay || (isTimeComplete(startTime) && isTimeComplete(endTime)));
+
+  const handlePrevImage = () =>
+    setActiveImage((prev) => (product ? (prev === 0 ? product.product_images.length - 1 : prev - 1) : 0));
+  const handleNextImage = () =>
+    setActiveImage((prev) => (product ? (prev === product.product_images.length - 1 ? 0 : prev + 1) : 0));
+
+  const handleRequestRental = async () => {
+    if (!product || !selectedDate) return;
+
+    if (!isVerified) {
+      router.push(`/verify-identity?next=/products/${product.id}`);
+      return;
+    }
+
+    const fullDay = isFullDayBooking || isAllDay;
+    const start = fullDay ? "00:00:00" : to24Hour(startTime.hour as number, startTime.period as "ص" | "م") + ":00";
+    const end = fullDay ? "23:59:59" : to24Hour(endTime.hour as number, endTime.period as "ص" | "م") + ":00";
+
+    setSubmitError("");
+    setIsSubmitting(true);
+    try {
+      await rentalService.createRequest({
+        product_id: product.id,
+        start_time: `${selectedDate} ${start}`,
+        end_time: `${selectedDate} ${end}`,
+      });
+      setIsRequestModalOpen(true);
+    } catch (error) {
+      const message =
+        error instanceof AxiosError
+          ? error.response?.data?.message
+          : "حدث خطأ أثناء إرسال طلب الاستئجار";
+      setSubmitError(message || "حدث خطأ أثناء إرسال طلب الاستئجار");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (loadError || !product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-400 text-sm">{loadError || "المنتج غير موجود"}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-bg-page">
-
       <header className="h-14 flex items-center justify-between px-6 border-b border-gray-100 bg-white sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <Link href="/dashboard" className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary transition-all border border-gray-100">
             <span className="material-symbols-rounded text-lg">arrow_forward</span>
           </Link>
           <div className="text-xs text-gray-400 hidden md:block">
-            <span className="text-primary cursor-pointer">الرئيسية</span> / {product.category} / {product.title}
+            <span className="text-primary cursor-pointer">الرئيسية</span> / {getCategoryLabel(product.category)} / {product.title}
           </div>
         </div>
         <div className="text-xl font-black text-primary italic select-none">مُتاح</div>
@@ -150,14 +178,13 @@ export default function ProductDetailPage() {
       <main className="grow max-w-5xl mx-auto w-full p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
-          {/* العمود اليسار: الصور */}
           <div>
             <div className="relative bg-white rounded-card border border-gray-100 h-72 flex items-center justify-center overflow-hidden mb-3">
               <img
-  src={product.product_images[activeImage]}
-  alt={product.title}
-  className="w-full h-full object-contain p-2"
-/>
+                src={product.product_images[activeImage]}
+                alt={product.title}
+                className="w-full h-full object-contain p-2"
+              />
 
               <button type="button" onClick={() => toggleFavorite(product.id)} className="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
                 <span
@@ -189,15 +216,13 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* العمود اليمين */}
           <div className="space-y-3 text-right">
-
             <div className="bg-white rounded-card border border-gray-100 p-5 space-y-3">
               <h1 className="text-lg font-black text-gray-800">{product.title}</h1>
 
               <span className="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary-light px-3 py-1 rounded-full">
                 <span className="material-symbols-rounded text-xs">sell</span>
-                {product.category}
+                {getCategoryLabel(product.category)}
               </span>
 
               <div className="flex items-center gap-2 pt-1">
@@ -205,8 +230,10 @@ export default function ProductDetailPage() {
                   <span className="material-symbols-rounded text-primary text-base">person</span>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-gray-800">{product.owner_full_name}</p>
-                  {product.owner_identity_status === "accepted" && (
+                  {/* ✅ مصححة: product.owner.full_name بدل owner_full_name */}
+                  <p className="text-xs font-bold text-gray-800">{product.owner.full_name}</p>
+                  {/* ✅ مصححة: product.owner.is_verified (boolean) بدل owner_identity_status enum */}
+                  {product.owner.is_verified && (
                     <p className="text-xs text-primary flex items-center gap-0.5">
                       <span className="material-symbols-rounded text-xs">verified</span> موثق
                     </p>
@@ -230,26 +257,26 @@ export default function ProductDetailPage() {
             </div>
 
             {!isVerified && (
-  <div className="bg-orange-50 border border-orange-100 rounded-card p-4 flex items-center justify-between gap-3">
-    <div className="flex items-center gap-2">
-      <span className="material-symbols-rounded text-orange-500 text-xl">security</span>
-      <p className="text-xs font-bold text-orange-600">لازم توثّق هويتك أولاً قبل الاستئجار</p>
-    </div>
-    <Link
-      href={`/verify-identity?next=/products/${product.id}`}
-      className="bg-orange-500 text-white text-xs font-bold px-4 py-2 rounded-lg whitespace-nowrap hover:brightness-105 transition-all"
-    >
-      وثّق الآن
-    </Link>
-  </div>
-)}
+              <div className="bg-orange-50 border border-orange-100 rounded-card p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-rounded text-orange-500 text-xl">security</span>
+                  <p className="text-xs font-bold text-orange-600">يجب توثيق هويتك أولاً قبل الاستئجار</p>
+                </div>
+                <Link
+                  href={`/verify-identity?next=/products/${product.id}`}
+                  className="bg-orange-500 text-white text-xs font-bold px-4 py-2 rounded-lg whitespace-nowrap hover:brightness-105 transition-all"
+                >
+                  وثّق الآن
+                </Link>
+              </div>
+            )}
 
-            {/* الكاليندر */}
+            {/* الكاليندر — اختيار يوم واحد بس من available_dates */}
             <div className="bg-white rounded-card border border-gray-100 p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-black text-gray-800 flex items-center gap-1">
                   <span className="material-symbols-rounded text-primary text-sm">calendar_today</span>
-                  اختر أيام الاستئجار
+                  اختر يوم الاستئجار
                 </h3>
                 <span className="text-xs text-gray-400">{MONTH_NAMES[monthIndex]} {year}</span>
               </div>
@@ -263,14 +290,13 @@ export default function ProductDetailPage() {
               <div className="grid grid-cols-7 gap-1">
                 {Array.from({ length: firstDayOffset }).map((_, i) => <div key={`empty-${i}`}></div>)}
                 {calendarCells.map(({ day, isoDate }) => {
-                  const availability = availableByDate.get(isoDate);
-                  const isAvailable = !!availability && !availability.is_booked;
-                  const isBooked = !!availability?.is_booked;
-                  const isSelected = selectedDates.includes(isoDate);
+                  // ✅ مصححة: مجرد فحص وجود بالـ Set، بدون تمييز محجوز
+                  // (قرار مؤقت — لا يوجد حقل is_booked بالـ API حالياً)
+                  const isAvailable = availableDatesSet.has(isoDate);
+                  const isSelected = selectedDate === isoDate;
 
                   let cellClass = "text-gray-300 cursor-not-allowed";
                   if (isSelected) cellClass = "bg-primary text-white";
-                  else if (isBooked) cellClass = "bg-gray-100 text-gray-400 line-through cursor-not-allowed";
                   else if (isAvailable) cellClass = "bg-primary-light text-gray-700 hover:bg-primary/20";
 
                   return (
@@ -278,7 +304,7 @@ export default function ProductDetailPage() {
                       key={isoDate}
                       type="button"
                       disabled={!isAvailable}
-                      onClick={() => toggleSelectDay(isoDate)}
+                      onClick={() => selectDay(isoDate)}
                       className={`aspect-square rounded-full text-xs font-bold transition-all ${cellClass}`}
                     >
                       {day}
@@ -287,132 +313,59 @@ export default function ProductDetailPage() {
                 })}
               </div>
 
+              {/* ⚠️ إزالة مؤقتة لتوضيح "محجوز" من legend، بما إنه لا يوجد
+                  تمييز فعلي بين متاح وغير متاح ومحجوز حالياً بالبيانات */}
               <div className="flex items-center gap-3 mt-3 text-xs text-gray-400 flex-wrap">
                 <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-primary-light border border-primary"></span> متاح</span>
                 <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-primary"></span> مختار</span>
                 <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-white border border-gray-200"></span> غير متاح</span>
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gray-200"></span> محجوز</span>
               </div>
             </div>
 
-            {/* خيارات الحجز */}
-            {selectedDates.length > 0 && (
+            {/* خيارات الحجز — نفس الساعات لليوم المختار، أو اليوم كامل.
+                ✅ isAllDay الآن حقل واحد على مستوى المنتج (product.is_all_day)،
+                مش محسوب لكل يوم لحاله كالسابق */}
+            {selectedDate && (
               <div className="bg-white rounded-card border border-gray-100 p-4 space-y-3">
-
-                {!allSelectedDaysAreFullDay && (
+                {!isAllDay && (
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={isFullDayBooking}
-                      onChange={(e) => {
-                        setIsFullDayBooking(e.target.checked);
-                        setSameHoursForAllDays(false);
-                      }}
+                      onChange={(e) => setIsFullDayBooking(e.target.checked)}
                       className="w-4 h-4 accent-primary"
                     />
-                    <span className="text-xs font-bold text-gray-700">حجز خلال جميع ساعات الأيام المختارة (24 ساعة)</span>
+                    <span className="text-xs font-bold text-gray-700">حجز خلال جميع ساعات هذا اليوم (24 ساعة)</span>
                   </label>
                 )}
 
-                {!isFullDayBooking && !allSelectedDaysAreFullDay && (
+                {!isFullDayBooking && !isAllDay && (
                   <>
-                    {hasTimeConflict ? (
-                      <div className="bg-red-50 border border-red-100 rounded-lg p-3 text-xs text-red-500 font-bold flex items-center gap-1.5">
-                        <span className="material-symbols-rounded text-sm">error</span>
-                        لا يمكن استخدام نفس الساعات لهذه الأيام — لا يوجد تقاطع بساعات الإتاحة بينها
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-xs text-gray-400 font-bold">ساعة البداية</p>
-                        <HourPeriodSelect value={sharedStart} onChange={setSharedStart} allowedHours={intersectionAllowedHours} />
+                    <p className="text-xs text-gray-400 font-bold">ساعة البداية</p>
+                    <HourPeriodSelect value={startTime} onChange={setStartTime} allowedHours={allowedHours} />
 
-                        <p className="text-xs text-gray-400 font-bold">ساعة النهاية</p>
-                        <HourPeriodSelect value={sharedEnd} onChange={setSharedEnd} allowedHours={intersectionAllowedHours} />
-
-                        <label className="flex items-center gap-2 cursor-pointer pt-1">
-                          <input
-                            type="checkbox"
-                            checked={sameHoursForAllDays}
-                            onChange={(e) => setSameHoursForAllDays(e.target.checked)}
-                            disabled={!isTimeComplete(sharedStart) || !isTimeComplete(sharedEnd)}
-                            className="w-4 h-4 accent-primary"
-                          />
-                          <span className="text-xs font-bold text-gray-700">حجز هذه الساعات في جميع الأيام المختارة</span>
-                        </label>
-                      </>
-                    )}
+                    <p className="text-xs text-gray-400 font-bold">ساعة النهاية</p>
+                    <HourPeriodSelect value={endTime} onChange={setEndTime} allowedHours={allowedHours} />
                   </>
                 )}
-
-                {!isFullDayBooking && !sameHoursForAllDays && !hasTimeConflict && !allSelectedDaysAreFullDay && (
-                  <div className="space-y-2 pt-2 border-t border-gray-100">
-                    <p className="text-xs font-bold text-gray-700">أو حدد ساعات كل يوم على حدة:</p>
-                    {selectedDates.map((date) => {
-                      const availability = availableByDate.get(date);
-                      if (availability?.is_all_day) return null;
-                      const allowedHours = getAllowedHoursForDay(date);
-                      const daySlot = perDaySlots[date] || { start: { hour: null, period: null }, end: { hour: null, period: null } };
-
-                      return (
-                        <div key={date} className="border border-gray-100 rounded-lg p-2.5 space-y-2">
-                          <p className="text-xs font-bold text-gray-700">{date}</p>
-
-                          <p className="text-xs text-gray-400 font-bold">من الساعة</p>
-                          <HourPeriodSelect
-                            value={daySlot.start}
-                            onChange={(val) =>
-                              setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, start: val } }))
-                            }
-                            allowedHours={allowedHours}
-                          />
-
-                          <p className="text-xs text-gray-400 font-bold">إلى الساعة</p>
-                          <HourPeriodSelect
-                            value={daySlot.end}
-                            onChange={(val) =>
-                              setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, end: val } }))
-                            }
-                            allowedHours={allowedHours}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
               </div>
             )}
 
+            {submitError && (
+              <p className="text-red-500 text-xs text-center font-bold">{submitError}</p>
+            )}
+
             <button
-  type="button"
-  disabled={!isBookingComplete}
- onClick={() => {
-  if (!isVerified) {
-    router.push(`/verify-identity?next=/products/${product.id}`);
-    return;
-  }
-  addNotification({
-    title: "تم قبول طلبك!",
-    message: `وافق ${product.owner_full_name} على طلب استئجار "${product.title}"`,
-    time: "الآن",
-    is_read: false,
-    icon: "check_circle",
-    color: "primary",
-    actionLabel: "اضغط هنا لاستكمال عملية الإيجار",
-    type: "rental_status",
-    ref_id: product.id,
-  });
-  setIsRequestModalOpen(true);
-}}
-  className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
->
-  <span className="material-symbols-rounded text-lg">handshake</span>
-  طلب استئجار
-</button>
-
+              type="button"
+              disabled={!isBookingComplete || isSubmitting}
+              onClick={handleRequestRental}
+              className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span className="material-symbols-rounded text-lg">handshake</span>
+              {isSubmitting ? "جارِ الإرسال..." : "طلب استئجار"}
+            </button>
           </div>
-
-         </div>
+        </div>
       </main>
 
       <RentalRequestModal

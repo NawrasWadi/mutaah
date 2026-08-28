@@ -1,9 +1,10 @@
 import { apiClient } from "@/api/client";
 import { LoginFormData, RegisterFormData } from "@/types/auth";
-
+import {UserProfile} from "@/types/auth";
+import {ResetPasswordFormData } from "@/types/auth";
 export const authService = {
   login: async (data: LoginFormData) => {
-    const res = await apiClient.post("/auth/login", {
+    const res = await apiClient.post("login", {
       login: data.identifier,
       password: data.password,
     });
@@ -17,21 +18,29 @@ export const authService = {
       password_confirmation: confirmPassword,
       terms,
     };
-    const res = await apiClient.post("/auth/register", payload);
+    const res = await apiClient.post("register", payload);
     return res.data; // { message, access_token, token_type, user }
   },
 
   logout: async () => {
-    await apiClient.post("/auth/logout");
+    await apiClient.post("logout");
   },
 
-  getMe: async () => {
-    const res = await apiClient.get("/auth/me");
-    return res.data;
-  },
-  forgotPassword: async (identifier: string) => {
-  const res = await apiClient.post("/auth/forgot-password", { identifier });
-  return res.data;
+  // ✅ مصححة: الرد { user: {...} } مباشرة، بدون تغليف {success, data}
+// المعتاد بباقي الـ endpoints — هذا الـ endpoint استثناء مؤكد من اختبار فعلي
+getMe: async (): Promise<UserProfile> => {
+  const res = await apiClient.get("profile");
+  return res.data.user;
 },
 
+  forgotPassword: async (email: string) => {
+    const res = await apiClient.post("forgot-password", { email });
+    return res.data;
+  },
+
+  // 🆕 جديدة بالكامل
+  resetPassword: async (data: ResetPasswordFormData) => {
+    const res = await apiClient.post("reset-password", data);
+    return res.data;
+  },
 };

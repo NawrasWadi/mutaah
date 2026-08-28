@@ -3,28 +3,26 @@ import { createContext, useContext, ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserProfile } from "@/types/auth";
 import { authService } from "@/services/auth.service";
-import { tokenStorage } from "@/utils/tokenStorage";
+import { useHasToken } from "@/hooks/useHasToken";
 import { queryKeys } from "@/api/queryKeys";
 
 interface UserProfileContextType {
   profile: UserProfile | null;
   isLoading: boolean;
   updateProfile: (updates: Partial<UserProfile>) => void;
-  updateIdentityStatus: (status: UserProfile["identity_status"]) => void;
 }
 
 const UserProfileContext = createContext<UserProfileContextType | undefined>(undefined);
 
 export function UserProfileProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const hasToken = useHasToken();
 
+  // ✅ مصححة: getMe() ترجع UserProfile جاهزة مباشرة (بدون .user إضافية)
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.profile,
-    queryFn: async () => {
-      const res = await authService.getMe();
-      return res.user as UserProfile;
-    },
-    enabled: !!tokenStorage.getAccessToken(),
+    queryFn: () => authService.getMe(),
+    enabled: hasToken,
     retry: false,
   });
 
@@ -36,12 +34,15 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const updateIdentityStatus = (status: UserProfile["identity_status"]) => {
-    updateProfile({ identity_status: status });
-  };
+  // ⚠️ حُذفت updateIdentityStatus بالكامل: كانت تعتمد على حقل
+  // identity_status غير الموجود إطلاقاً بـ /profile الحقيقي (هذا الحقل
+  // كان بقايا من نظام mock قديم). حالة التوثيق الحقيقية هي is_verified
+  // (boolean بسيط)، وصفحة verify-identity الحالية تدير حالتها بنفسها
+  // عبر React Query الخاص بموديول identity-verifications المنفصل،
+  // فلا حاجة فعلية لهذه الدالة حالياً.
 
   return (
-    <UserProfileContext.Provider value={{ profile, isLoading, updateProfile, updateIdentityStatus }}>
+    <UserProfileContext.Provider value={{ profile, isLoading, updateProfile }}>
       {children}
     </UserProfileContext.Provider>
   );

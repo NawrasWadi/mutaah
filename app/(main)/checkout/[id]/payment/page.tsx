@@ -127,8 +127,7 @@ const { markAsRented } = useProducts();
             disabled={!receiptFile}
             onClick={() => {
                   setPaymentConfirmed(true);
-                  markAsRented(Number(productId));
-                   }}
+                  markAsRented(productId as string);                   }}
             className="w-full py-3.5 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
           <span className="material-symbols-rounded text-lg">send</span>
@@ -153,21 +152,23 @@ const { markAsRented } = useProducts();
       </p>
 
       <div className="flex flex-col gap-3">
-        <Link
-          href={`/chat/${productId}`}
-          className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-        >
-          <span className="material-symbols-rounded text-lg">chat</span>
-          الذهاب للمحادثة مع المالك
-        </Link>
+  {/* ⚠️ معلّق مؤقتاً — ميزة الشات مؤجلة، سيُعاد تفعيلها لاحقاً بعد التسليم
+  <Link
+    href={`/chat/${productId}`}
+    className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+  >
+    <span className="material-symbols-rounded text-lg">chat</span>
+    الذهاب للمحادثة مع المالك
+  </Link>
+  */}
 
-        <Link
-          href="/dashboard"
-          className="w-full py-3 rounded-btn bg-gray-50 text-gray-600 font-bold text-sm border border-gray-100 hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
-        >
-          العودة للرئيسية
-        </Link>
-      </div>
+  <Link
+    href="/dashboard"
+    className="w-full py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+  >
+    العودة للرئيسية
+  </Link>
+</div>
 
     </div>
   </div>

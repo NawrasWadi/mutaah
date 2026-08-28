@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useUserProfile } from "@/context/UserProfileContext";
 
 const menuItems = [
   { label: "حسابي", icon: "account_circle", href: "/profile" },
@@ -16,6 +17,7 @@ interface UserDropdownProps {
 
 export default function UserDropdown({ align = "right" }: UserDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { profile } = useUserProfile();
 
   const alignmentClass = align === "left" ? "left-0 origin-top-left" : "right-0 origin-top-right";
 
@@ -35,29 +37,48 @@ export default function UserDropdown({ align = "right" }: UserDropdownProps) {
           <div className={`absolute top-12 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden z-[200] animate-in fade-in zoom-in duration-200 text-right ${alignmentClass}`}>
 
             <div className="p-4 border-b border-gray-50 bg-gray-50/50">
-              <div className="text-sm font-bold text-gray-800">أحمد سالم</div>
-              <div className="text-xs text-gray-400 font-medium">@ahmed_salem</div>
+              {profile ? (
+                <>
+                  <div className="text-sm font-bold text-gray-800">{profile.full_name}</div>
+                  <div className="text-xs text-gray-400 font-medium">@{profile.username}</div>
+                </>
+              ) : (
+                <div className="text-sm font-bold text-gray-800">ضيف</div>
+              )}
             </div>
 
             <div className="p-1">
-              {menuItems.map((item) => (
+              {profile ? (
+                <>
+                  {menuItems.map((item) => (
+                    <Link
+                      href={item.href}
+                      key={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-xs text-gray-600 cursor-pointer hover:bg-primary-light hover:text-primary transition-colors rounded-lg group"
+                    >
+                      <span className="material-symbols-rounded text-sm text-gray-400 group-hover:text-primary transition-colors">{item.icon}</span>
+                      <span className="font-medium">{item.label}</span>
+                    </Link>
+                  ))}
+
+                  <div className="h-px bg-gray-50 my-1 mx-2"></div>
+
+                  <Link href="/logout" className="flex items-center gap-3 px-4 py-2.5 text-xs text-red-500 cursor-pointer hover:bg-red-50 transition-colors rounded-lg group">
+                    <span className="material-symbols-rounded text-sm">logout</span>
+                    <span className="font-medium">تسجيل خروج</span>
+                  </Link>
+                </>
+              ) : (
                 <Link
-                  href={item.href}
-                  key={item.href}
+                  href="/register"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-xs text-gray-600 cursor-pointer hover:bg-primary-light hover:text-primary transition-colors rounded-lg group"
+                  className="flex items-center gap-3 px-4 py-2.5 text-xs text-primary cursor-pointer hover:bg-primary-light transition-colors rounded-lg group font-bold"
                 >
-                  <span className="material-symbols-rounded text-sm text-gray-400 group-hover:text-primary transition-colors">{item.icon}</span>
-                  <span className="font-medium">{item.label}</span>
+                  <span className="material-symbols-rounded text-sm">person_add</span>
+                  <span>إنشاء حساب</span>
                 </Link>
-              ))}
-
-              <div className="h-px bg-gray-50 my-1 mx-2"></div>
-
-              <Link href="/logout" className="flex items-center gap-3 px-4 py-2.5 text-xs text-red-500 cursor-pointer hover:bg-red-50 transition-colors rounded-lg group">
-                <span className="material-symbols-rounded text-sm">logout</span>
-                <span className="font-medium">تسجيل خروج</span>
-              </Link>
+              )}
             </div>
           </div>
         </>

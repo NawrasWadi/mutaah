@@ -9,14 +9,13 @@ interface ModalProps {
 }
 
 export default function ForgotPasswordModal({ isOpen, onClose }: ModalProps) {
-  const [identifier, setIdentifier] = useState("");
+  const [email, setEmail] = useState(""); // ✅ بدل identifier
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
 
   const handleClose = () => {
-    // إعادة ضبط الحالة لما المودال يسكر، حتى تفتح نظيفة المرة الجاية
-    setIdentifier("");
+    setEmail("");
     setError("");
     setIsSent(false);
     onClose();
@@ -24,15 +23,21 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ModalProps) {
 
   if (!isOpen) return null;
 
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
   const handleSubmit = async () => {
-    if (!identifier.trim()) {
-      setError("أدخل اسم المستخدم أو البريد الإلكتروني");
+    if (!email.trim()) {
+      setError("أدخل بريدك الإلكتروني");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError("أدخل بريداً إلكترونياً صالحاً");
       return;
     }
     setError("");
     setIsSubmitting(true);
     try {
-      await authService.forgotPassword(identifier);
+      await authService.forgotPassword(email);
       setIsSent(true);
     } catch (err) {
       const message =
@@ -47,41 +52,36 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ModalProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-primary/10 backdrop-blur-sm animate-in fade-in duration-300">
-
       <div className="absolute inset-0" onClick={handleClose}></div>
 
       <div className="relative bg-white w-full max-w-[340px] rounded-[32px] p-8 shadow-2xl shadow-primary/20 border border-white animate-in zoom-in-95 duration-300">
-
         {!isSent ? (
           <>
-            {/* أيقونة القفل */}
             <div className="flex flex-col items-center text-center mb-6">
               <div className="w-14 h-14 rounded-full bg-primary-light border-2 border-primary-mid flex items-center justify-center text-primary shadow-sm mb-4">
                 <span className="material-symbols-rounded text-[32px]">lock_reset</span>
               </div>
               <h2 className="text-[18px] font-black text-gray-800 mb-2">استعادة كلمة السر</h2>
               <p className="text-gray-400 text-[11px] leading-relaxed">
-                أدخل اسم المستخدم أو البريد الإلكتروني<br/>
+                أدخل بريدك الإلكتروني<br/>
                 وسنرسل لك رابط إعادة تعيين كلمة السر
               </p>
             </div>
 
-            {/* حقل الإدخال */}
             <div className="relative group mb-2">
               <span className="material-symbols-rounded absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
-                person
+                mail
               </span>
               <input
-                type="text"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="اسم المستخدم أو البريد الإلكتروني"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="البريد الإلكتروني"
                 className="w-full pr-11 pl-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs outline-none focus:bg-white focus:border-primary transition-all"
               />
             </div>
             {error && <p className="text-red-500 text-xs text-right mb-4">{error}</p>}
 
-            {/* زر الإرسال */}
             <button
               type="button"
               onClick={handleSubmit}
@@ -93,7 +93,6 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ModalProps) {
           </>
         ) : (
           <>
-            {/* حالة النجاح */}
             <div className="flex flex-col items-center text-center mb-6">
               <div className="w-14 h-14 rounded-full bg-primary-light border-2 border-primary-mid flex items-center justify-center text-primary shadow-sm mb-4">
                 <span className="material-symbols-rounded text-[32px]">mark_email_read</span>
@@ -101,7 +100,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ModalProps) {
               <h2 className="text-[18px] font-black text-gray-800 mb-2">تفقد بريدك الإلكتروني</h2>
               <p className="text-gray-400 text-[11px] leading-relaxed">
                 أرسلنا رابط إعادة تعيين كلمة السر إلى بريدك الإلكتروني.<br/>
-                افتح الرابط لتسجيل الدخول وتحديث كلمة السر.
+                افتح الرابط لتحديث كلمة السر.
               </p>
             </div>
 
@@ -115,7 +114,6 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ModalProps) {
           </>
         )}
 
-        {/* العودة لتسجيل الدخول */}
         <button
           onClick={handleClose}
           className="w-full mt-4 flex items-center justify-center gap-2 text-gray-400 text-[12px] font-bold hover:text-primary transition-colors"
@@ -123,7 +121,6 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ModalProps) {
           <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
           العودة لتسجيل الدخول
         </button>
-
       </div>
     </div>
   );

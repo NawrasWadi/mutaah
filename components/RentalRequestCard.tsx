@@ -4,8 +4,8 @@ import { RentalRequest } from "@/types/rental";
 
 interface Props {
   request: RentalRequest;
-  onAccept: (id: number) => void;
-  onReject: (id: number) => void;
+  onAccept: (id: string) => void;
+  onReject: (id: string) => void;
 }
 
 export default function RentalRequestCard({ request, onAccept, onReject }: Props) {

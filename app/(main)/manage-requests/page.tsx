@@ -1,22 +1,47 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
 import RentalRequestCard from "@/components/RentalRequestCard";
-import { MOCK_RENTAL_REQUESTS } from "@/mock/rental-requests";
+import { rentalService } from "@/services/rental.service";
 import UserDropdown from "@/components/UserDropdown";
 import Footer from "@/components/Footer";
+import { useState, useEffect } from "react";
+import { RentalRequest } from "@/types/rental";
 
 export default function ManageRequestsPage() {
-  const [requests, setRequests] = useState(MOCK_RENTAL_REQUESTS);
+  const [requests, setRequests] = useState<RentalRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleAccept = (id: number) => {
-    console.log("Accepted request:", id);
-    setRequests(prev => prev.filter(r => r.id !== id)); // إزالة الطلب بعد القرار كمحاكاة
+  useEffect(() => {
+    const loadRequests = async () => {
+      setIsLoading(true);
+      try {
+        const data = await rentalService.getMyRequests();
+        setRequests(data.filter((r) => r.owner_status === "pending"));
+      } catch (error) {
+        console.error("Failed to fetch rental requests:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadRequests();
+  }, []);
+
+  const handleAccept = async (id: string) => {
+    try {
+      await rentalService.respondToRequest(id, "accepted");
+      setRequests((prev) => prev.filter((r) => r.id !== id));
+    } catch (error) {
+      console.error("Failed to accept request:", error);
+    }
   };
 
-  const handleReject = (id: number) => {
-    console.log("Rejected request:", id);
-    setRequests(prev => prev.filter(r => r.id !== id));
+  const handleReject = async (id: string) => {
+    try {
+      await rentalService.respondToRequest(id, "rejected");
+      setRequests((prev) => prev.filter((r) => r.id !== id));
+    } catch (error) {
+      console.error("Failed to reject request:", error);
+    }
   };
 
   return (
@@ -46,7 +71,12 @@ export default function ManageRequestsPage() {
         </div>
 
         {/* قائمة الطلبات */}
-        {requests.length > 0 ? (
+        {isLoading ? (
+  <div className="py-20 text-center flex flex-col items-center gap-3">
+    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+    <p className="text-xs text-gray-400 font-bold">جاري جلب الطلبات</p>
+  </div>
+) : requests.length > 0 ? (
           <div className="flex flex-col gap-2.5 pb-20">
             {requests.map(req => (
               <RentalRequestCard 

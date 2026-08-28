@@ -3,18 +3,27 @@ import { useNotifications } from "@/context/NotificationsContext";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import UserDropdown from "@/components/UserDropdown";
-
+import { NotificationType } from "@/types/notifications";
 
 export default function NotificationsPage() {
-const { notifications, markAllRead } = useNotifications();
-  const getIconColor = (color?: "primary" | "orange" | "green") => {
-    const colors = {
-      orange: "text-orange-500",
-      green: "text-green-500",
-      primary: "text-primary",
-    };
-    return colors[color ?? "primary"];
+const { notifications, markAllRead, markAsRead } = useNotifications();
+  // حساب الأيقونة واللون محلياً حسب type — الباك لا يرسل هذه القيم
+const getNotificationIcon = (type: NotificationType) => {
+  const map: Record<NotificationType, { icon: string; color: string }> = {
+    identity_verification: { icon: "verified_user", color: "text-primary" },
+    rental_status: { icon: "event_available", color: "text-orange-500" },
+    payment_update: { icon: "payments", color: "text-green-500" },
+    subscription_update: { icon: "workspace_premium", color: "text-primary" },
+    plan_expired: { icon: "schedule", color: "text-orange-500" },
   };
+  return map[type] ?? { icon: "notifications", color: "text-gray-400" };
+};
+
+// تنسيق بسيط لعرض created_at كنص تاريخ مقروء
+const formatNotificationDate = (isoDate: string) => {
+  const date = new Date(isoDate);
+  return date.toLocaleDateString("ar-EG", { day: "numeric", month: "short" });
+};
 
   return (
   
@@ -41,25 +50,26 @@ const { notifications, markAllRead } = useNotifications();
           <div className="flex flex-col">
             {notifications.map((notif) => (
               <div
-                key={notif.id}
-                className={`flex gap-4 p-6 transition-all border-b border-gray-200 last:border-0 hover:bg-gray-50/30 ${!notif.is_read ? "bg-primary/[0.02]" : ""}`}
-              >
+  key={notif.id}
+  onClick={() => !notif.is_read && markAsRead(notif.id)}
+  className={`flex gap-4 p-6 transition-all border-b border-gray-200 last:border-0 hover:bg-gray-50/30 cursor-pointer ${!notif.is_read ? "bg-primary/[0.02]" : ""}`}
+>
                 <div className="shrink-0 pt-1.5">
                   <div className={`w-2 h-2 rounded-full ${notif.is_read ? "bg-gray-200" : "bg-primary shadow-[0_0_8px_rgba(0,167,157,0.4)]"}`}></div>
                 </div>
 
                 <div className="flex-1 text-right">
                   <div className="flex items-center gap-2 font-bold text-sm text-gray-800 mb-1">
-                    <span className={`material-symbols-rounded text-sm ${getIconColor(notif.color)}`}>
-                      {notif.icon}
-                    </span>
+                    <span className={`material-symbols-rounded text-sm ${getNotificationIcon(notif.type).color}`}>
+  {getNotificationIcon(notif.type).icon}
+</span>
                     {notif.title}
                   </div>
 
                   <p className="text-sm text-gray-500 leading-relaxed">
                     {notif.message}
                   </p>
-
+{/*
                   {notif.hasActions && (
                     <div className="flex gap-2 mt-4">
                       <button className="bg-primary text-white px-5 py-2 rounded-xl text-xs font-bold hover:brightness-105 transition-all">
@@ -69,8 +79,8 @@ const { notifications, markAllRead } = useNotifications();
                         رفض
                       </button>
                     </div>
-                  )}
-
+                  )} */}
+{/*
                   {notif.actionLabel && (
   <Link
     href={`/checkout/${notif.ref_id}`}
@@ -79,18 +89,18 @@ const { notifications, markAllRead } = useNotifications();
     <span className="material-symbols-rounded text-sm font-bold">arrow_back</span>
     {notif.actionLabel}
   </Link>
-)}
+)} */}
                 </div>
 
-                <div className="text-xs text-gray-300 font-bold whitespace-nowrap pt-1 uppercase">
-                  {notif.time}
-                </div>
+               <div className="text-xs text-gray-300 font-bold whitespace-nowrap pt-1 uppercase">
+  {formatNotificationDate(notif.created_at)}
+</div>
               </div>
             ))}
           </div>
         </div>
       </main>
-      
+       <Footer />
     </div>
   );
 }

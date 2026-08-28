@@ -1,36 +1,31 @@
 "use client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useState } from "react";
+import { AxiosError } from "axios";
 import { useAddProduct } from "@/context/AddProductContext";
-import { useProducts } from "@/context/ProductsContext";
-import { AvailabilityDate } from "@/types/addProduct";
-import { PublicProduct } from "@/types/product";
 import UserDropdown from "@/components/UserDropdown";
 import HourPeriodSelect from "@/components/HourPeriodSelect";
 import { MONTH_NAMES, DAY_LABELS } from "@/utils/calendar";
 import { TimeValue, isTimeComplete, to24Hour, getAllHours } from "@/utils/time";
-import { useState } from "react";
-import { getCategoryIcon } from "@/utils/productCategory";
-
+import { productService } from "@/services/product.service";
 
 const ALL_HOURS = getAllHours();
 
 export default function AddProductStep2Page() {
   const router = useRouter();
-  const { formData, updateFormData, resetFormData } = useAddProduct();
-  const { products, addProduct } = useProducts();
+  const { formData, resetFormData } = useAddProduct();
 
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [isFullDayAvailability, setIsFullDayAvailability] = useState(false);
-  const [sameHoursForAllDays, setSameHoursForAllDays] = useState(false);
-
   const [sharedStart, setSharedStart] = useState<TimeValue>({ hour: null, period: null });
   const [sharedEnd, setSharedEnd] = useState<TimeValue>({ hour: null, period: null });
 
-  const [perDaySlots, setPerDaySlots] = useState<Record<string, { start: TimeValue; end: TimeValue }>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const year = 2025;
-  const monthIndex = 4; // مايو — ثابتة بنفس نمط صفحة Product Details
+  const monthIndex = 4;
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const firstDayOffset = new Date(year, monthIndex, 1).getDay();
 
@@ -44,72 +39,50 @@ export default function AddProductStep2Page() {
     setSelectedDates((prev) =>
       prev.includes(isoDate) ? prev.filter((d) => d !== isoDate) : [...prev, isoDate]
     );
-    setIsFullDayAvailability(false);
-    setSameHoursForAllDays(false);
-    setSharedStart({ hour: null, period: null });
-    setSharedEnd({ hour: null, period: null });
-    setPerDaySlots({});
   };
 
+  // متاح إذا: فيه أيام مختارة، و(إما "كل اليوم" مفعّلة أو الساعتين مكتملتين)
   const isAvailabilityComplete =
     selectedDates.length > 0 &&
-    (isFullDayAvailability ||
-      (sameHoursForAllDays && isTimeComplete(sharedStart) && isTimeComplete(sharedEnd)) ||
-      (!sameHoursForAllDays &&
-        selectedDates.every(
-          (d) =>
-            isTimeComplete(perDaySlots[d]?.start || { hour: null, period: null }) &&
-            isTimeComplete(perDaySlots[d]?.end || { hour: null, period: null })
-        )));
-
-  const buildAvailableDates = (): AvailabilityDate[] => {
-    return selectedDates.map((date) => {
-      if (isFullDayAvailability) {
-        return { date, start_time: "00:00", end_time: "23:59", is_all_day: true, is_booked: false };
-      }
-      if (sameHoursForAllDays) {
-        return {
-          date,
-          start_time: to24Hour(sharedStart.hour as number, sharedStart.period as "ص" | "م"),
-          end_time: to24Hour(sharedEnd.hour as number, sharedEnd.period as "ص" | "م"),
-          is_all_day: false,
-          is_booked: false,
-        };
-      }
-      const slot = perDaySlots[date];
-      return {
-        date,
-        start_time: to24Hour(slot.start.hour as number, slot.start.period as "ص" | "م"),
-        end_time: to24Hour(slot.end.hour as number, slot.end.period as "ص" | "م"),
-        is_all_day: false,
-        is_booked: false,
-      };
-    });
-  };
+    (isFullDayAvailability || (isTimeComplete(sharedStart) && isTimeComplete(sharedEnd)));
 
   const handleBack = () => router.push("/add-items/step-1");
 
-  const handlePublish = () => {
-    const available_dates = buildAvailableDates();
-    updateFormData({ available_dates });
+  const handlePublish = async () => {
+    if (!isAvailabilityComplete) return;
 
-    const newId = products.reduce((max, p) => (p.id > max ? p.id : max), 0) + 1;
+    setSubmitError("");
+    setIsSubmitting(true);
+    try {
+      await productService.createProduct({
+        title: formData.title,
+        category: formData.category,
+        description: formData.description,
+        price_per_hour: formData.price_per_hour,
+        deposit_amount: formData.deposit_amount,
+        images: formData.product_images,
+        available_dates: selectedDates,
+        is_all_day: isFullDayAvailability,
+        // start_time/end_time اختياريين حسب التوثيق — لا نرسلهم إذا "كل اليوم"
+        ...(isFullDayAvailability
+          ? {}
+          : {
+              start_time: to24Hour(sharedStart.hour as number, sharedStart.period as "ص" | "م"),
+              end_time: to24Hour(sharedEnd.hour as number, sharedEnd.period as "ص" | "م"),
+            }),
+      });
 
-    const newProduct: PublicProduct = {
-      id: newId,
-      title: formData.title,
-      category: formData.category,
-      // ⚠️ قيم مؤقتة لحد ما يتوفر ربط ببروفايل المالك الفعلي
-      governorate: "غزة",
-      district: "غير محدد",
-      price_per_hour: Number(formData.price_per_hour),
-      icon: getCategoryIcon(formData.category),
-      status: "active",
-    };
-
-    addProduct(newProduct);
-    resetFormData();
-    router.push("/dashboard");
+      resetFormData();
+      router.push("/dashboard");
+    } catch (error) {
+      const message =
+        error instanceof AxiosError
+          ? error.response?.data?.message
+          : "حدث خطأ أثناء نشر المنتج، حاول مرة أخرى";
+      setSubmitError(message || "حدث خطأ أثناء نشر المنتج، حاول مرة أخرى");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -187,7 +160,7 @@ export default function AddProductStep2Page() {
               </div>
             </div>
 
-            {/* خيارات الإتاحة */}
+            {/* خيارات الإتاحة — ساعات واحدة تُطبّق على كل الأيام المختارة (مطابق للتوثيق) */}
             {selectedDates.length > 0 && (
               <div className="space-y-3 border-t border-gray-100 pt-3">
 
@@ -195,10 +168,7 @@ export default function AddProductStep2Page() {
                   <input
                     type="checkbox"
                     checked={isFullDayAvailability}
-                    onChange={(e) => {
-                      setIsFullDayAvailability(e.target.checked);
-                      setSameHoursForAllDays(false);
-                    }}
+                    onChange={(e) => setIsFullDayAvailability(e.target.checked)}
                     className="w-4 h-4 accent-primary"
                   />
                   <span className="text-xs font-bold text-gray-700">متاح خلال جميع ساعات الأيام المختارة (24 ساعة)</span>
@@ -211,45 +181,6 @@ export default function AddProductStep2Page() {
 
                     <p className="text-xs text-gray-400 font-bold">إلى الساعة</p>
                     <HourPeriodSelect value={sharedEnd} onChange={setSharedEnd} allowedHours={ALL_HOURS} />
-
-                    <label className="flex items-center gap-2 cursor-pointer pt-2 border-t border-gray-100">
-                      <input
-                        type="checkbox"
-                        checked={sameHoursForAllDays}
-                        onChange={(e) => setSameHoursForAllDays(e.target.checked)}
-                        disabled={!isTimeComplete(sharedStart) || !isTimeComplete(sharedEnd)}
-                        className="w-4 h-4 accent-primary"
-                      />
-                      <span className="text-xs font-bold text-gray-700">متاح خلال هذه الساعات في كل الأيام المختارة</span>
-                    </label>
-                  </div>
-                )}
-
-                {!isFullDayAvailability && !sameHoursForAllDays && (
-                  <div className="space-y-2 pt-2 border-t border-gray-100">
-                    <p className="text-xs font-bold text-gray-700">أو حدد ساعات كل يوم على حدة:</p>
-                    {selectedDates.map((date) => {
-                      const daySlot = perDaySlots[date] || { start: { hour: null, period: null }, end: { hour: null, period: null } };
-                      return (
-                        <div key={date} className="border border-gray-100 rounded-lg p-2.5 space-y-2">
-                          <p className="text-xs font-bold text-gray-700">{date}</p>
-
-                          <p className="text-xs text-gray-400 font-bold">من الساعة</p>
-                          <HourPeriodSelect
-                            value={daySlot.start}
-                            onChange={(val) => setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, start: val } }))}
-                            allowedHours={ALL_HOURS}
-                          />
-
-                          <p className="text-xs text-gray-400 font-bold">إلى الساعة</p>
-                          <HourPeriodSelect
-                            value={daySlot.end}
-                            onChange={(val) => setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, end: val } }))}
-                            allowedHours={ALL_HOURS}
-                          />
-                        </div>
-                      );
-                    })}
                   </div>
                 )}
               </div>
@@ -263,24 +194,29 @@ export default function AddProductStep2Page() {
               </p>
             </div>
 
+            {submitError && (
+              <p className="text-red-500 text-xs text-center font-bold">{submitError}</p>
+            )}
+
             {/* أزرار التحكم */}
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={handleBack}
-                className="flex-1 py-3 rounded-btn bg-gray-50 text-gray-600 font-bold text-sm border border-gray-100 hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
+                disabled={isSubmitting}
+                className="flex-1 py-3 rounded-btn bg-gray-50 text-gray-600 font-bold text-sm border border-gray-100 hover:bg-gray-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <span className="material-symbols-rounded text-base">arrow_forward</span>
                 رجوع
               </button>
               <button
                 type="button"
-                disabled={!isAvailabilityComplete}
+                disabled={!isAvailabilityComplete || isSubmitting}
                 onClick={handlePublish}
                 className="flex-[2] py-3 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span className="material-symbols-rounded text-base">cloud_upload</span>
-                حفظ ونشر المنتج
+                {isSubmitting ? "جارِ النشر..." : "حفظ ونشر المنتج"}
               </button>
             </div>
 
@@ -290,3 +226,56 @@ export default function AddProductStep2Page() {
     </div>
   );
 }
+
+/* ============================================================
+   🗄️ مرجع معطّل — ميزة "ساعات مختلفة لكل يوم على حدة"
+   غير مدعومة من الـ API حالياً (start_time/end_time حقلين وحيدين
+   لكل الطلب، مش لكل يوم). محفوظة هون لو الباك ضاف الدعم مستقبلاً.
+   ============================================================
+
+const [sameHoursForAllDays, setSameHoursForAllDays] = useState(false);
+const [perDaySlots, setPerDaySlots] = useState<Record<string, { start: TimeValue; end: TimeValue }>>({});
+
+// داخل toggleSelectDay، كان فيه أيضاً:
+// setSameHoursForAllDays(false);
+// setPerDaySlots({});
+
+// شرط الإكمال القديم:
+// const isAvailabilityComplete =
+//   selectedDates.length > 0 &&
+//   (isFullDayAvailability ||
+//     (sameHoursForAllDays && isTimeComplete(sharedStart) && isTimeComplete(sharedEnd)) ||
+//     (!sameHoursForAllDays &&
+//       selectedDates.every(
+//         (d) =>
+//           isTimeComplete(perDaySlots[d]?.start || { hour: null, period: null }) &&
+//           isTimeComplete(perDaySlots[d]?.end || { hour: null, period: null })
+//       )));
+
+// الـ JSX القديم لتحديد ساعات كل يوم لحاله:
+// {!isFullDayAvailability && !sameHoursForAllDays && (
+//   <div className="space-y-2 pt-2 border-t border-gray-100">
+//     <p className="text-xs font-bold text-gray-700">أو حدد ساعات كل يوم على حدة:</p>
+//     {selectedDates.map((date) => {
+//       const daySlot = perDaySlots[date] || { start: { hour: null, period: null }, end: { hour: null, period: null } };
+//       return (
+//         <div key={date} className="border border-gray-100 rounded-lg p-2.5 space-y-2">
+//           <p className="text-xs font-bold text-gray-700">{date}</p>
+//           <p className="text-xs text-gray-400 font-bold">من الساعة</p>
+//           <HourPeriodSelect
+//             value={daySlot.start}
+//             onChange={(val) => setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, start: val } }))}
+//             allowedHours={ALL_HOURS}
+//           />
+//           <p className="text-xs text-gray-400 font-bold">إلى الساعة</p>
+//           <HourPeriodSelect
+//             value={daySlot.end}
+//             onChange={(val) => setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, end: val } }))}
+//             allowedHours={ALL_HOURS}
+//           />
+//         </div>
+//       );
+//     })}
+//   </div>
+// )}
+============================================================ */

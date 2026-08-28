@@ -1,30 +1,23 @@
-export type IdentityStatus = "pending" | "accepted" | "rejected";
+// ⚠️ نظام أسباب الرفض القديم (VerificationErrorReason, AffectedImage,
+// VERIFICATION_ERROR_MESSAGES, ERROR_TO_AFFECTED_IMAGE) انحذف بالكامل.
+// السبب: الدوك الرسمي يقول صراحة إن نموذج الـ AI (Colab) غير متصل حالياً،
+// وكل طلب يذهب مباشرة لمراجعة يدوية. لا يوجد أي "سبب رفض مصنّف" بالـ API —
+// فقط admin_note (نص حر) من الأدمن. ⚠️ خبري لمى: هاد الفيتشر بالكامل
+// غير مدعوم حالياً بالباك، وممكن يرجع لاحقاً لو تم تفعيل الـ Colab model.
 
-export interface VerificationResult {
-  status: IdentityStatus;
-  error_status?: VerificationErrorReason;
+export type IdentityVerificationStatus =
+  | "manual_review"
+  | "verified"
+  | "approved"
+  | "rejected";
+
+export interface IdentityVerification {
+  id: string; // UUID
+  status: IdentityVerificationStatus;
+  // ⚠️ غير مؤكد: هل GET /identity-verifications/current بيرجع admin_note
+  // فعلياً للمستخدم؟ الدوك ذكرها بس كـ input بطلب الأدمن (reject)،
+  // مش كحقل مؤكد بالرد. يحتاج اختبار Postman فعلي.
+  admin_note?: string;
+  // ⚠️ غير موثّق ضمن هذا الـ resource تحديداً — افتراض شائع بس غير مؤكد
+  created_at?: string;
 }
-export type VerificationErrorReason =
-  | "blurry_image"          // blur detection - الصورة مهزوزة أو غير واضحة
-  | "no_face_detected"      // face detection - مافي وجه (سيلفي)
-  | "multiple_faces"        // face detection - أكتر من وجه (سيلفي)
-  | "not_id_card"           // ID detection - الصورة مش بطاقة هوية (هوية)
-  | "face_mismatch";        // verification - الوجه ما بطابق الهوية (الاثنين)
-
-export type AffectedImage = "id_image" | "selfie_image" | "both";
-
-export const VERIFICATION_ERROR_MESSAGES: Record<VerificationErrorReason, string> = {
-  blurry_image: "الصورة غير واضحة أو فيها اهتزاز، يرجى إعادة التصوير في إضاءة جيدة",
-  no_face_detected: "لم يتم العثور على وجه واضح بالصورة الشخصية",
-  multiple_faces: "تم رصد أكثر من وجه بالصورة، يرجى إعادة التصوير بشكل فردي",
-  not_id_card: "الصورة المرفوعة لا تبدو كصورة هوية صالحة",
-  face_mismatch: "لم يتطابق وجهك مع صورة الهوية المرفوعة",
-};
-
-export const ERROR_TO_AFFECTED_IMAGE: Record<VerificationErrorReason, AffectedImage> = {
-  blurry_image: "both", // ⚠️ معلّق — الباك لازم يحدد أي صورة بالضبط كانت مهزوزة
-  no_face_detected: "selfie_image",
-  multiple_faces: "selfie_image",
-  not_id_card: "id_image",
-  face_mismatch: "both",
-};

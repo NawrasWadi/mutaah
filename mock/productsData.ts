@@ -7,7 +7,7 @@ import { getCategoryIcon } from "@/utils/productCategory";
 // lock=${seed} بيثبت نفس الصورة بكل مرة بدل ما تتغير عشوائياً مع كل تحميل للصفحة
 
 export interface ProductRecord {
-  id: number;
+  id: string;
   title: string;
   category: string;
   price_per_hour: number;
@@ -29,9 +29,9 @@ export interface ProductRecord {
 
 export const PRODUCTS_DATA: ProductRecord[] = [
  {
-  id: 1,
+  id: "1",
   title: "كاميرا سوني A7 III",
-  category: "تصوير",
+  category: "cameras",
   price_per_hour: 25,
   deposit_amount: 300,
   status: "active",
@@ -64,9 +64,9 @@ export const PRODUCTS_DATA: ProductRecord[] = [
   ],
 },
   {
-    id: 2,
+    id: "2",
     title: "مولد كهرباء 5KW",
-    category: "طاقة",
+    category: "items",
     price_per_hour: 40,
     deposit_amount: 500,
     status: "active",
@@ -85,9 +85,9 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     ],
   },
   {
-    id: 3,
+    id: "3",
     title: "مثقاب بوش كهربائي",
-    category: "أدوات كهربائية",
+    category: "items",
     price_per_hour: 10,
     deposit_amount: 100,
     status: "frozen",
@@ -104,9 +104,9 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     ],
   },
   {
-    id: 4,
+    id: "4",
     title: "لابتوب ديل XPS 15",
-    category: "إلكترونيات",
+    category: "electronics",
     price_per_hour: 30,
     deposit_amount: 250,
     status: "active",
@@ -124,9 +124,9 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     ],
   },
   {
-    id: 5,
+    id: "5",
     title: "سيارة هيونداي 2022",
-    category: "مركبات",
+    category: "items",
     price_per_hour: 120,
     deposit_amount: 1500,
     status: "active",
@@ -145,9 +145,9 @@ export const PRODUCTS_DATA: ProductRecord[] = [
     ],
   },
   {
-    id: 6,
+    id: "6",
     title: "آيفون 14 برو",
-    category: "إلكترونيات",
+    category: "electronics",
     price_per_hour: 18,
     deposit_amount: 200,
     status: "active",
@@ -164,9 +164,9 @@ images: ["/images/products/iPhone_14_Pro_1.jpg.jpg", "/images/products/iPhone_14
     ],
   },
   {
-    id: 7,
+    id: "7",
     title: "ألواح شمسية 400W",
-    category: "طاقة",
+    category: "items",
     price_per_hour: 25,
     deposit_amount: 350,
     status: "active",
@@ -183,9 +183,9 @@ images: ["/images/products/Solar_Panel_400W_1.webp.webp", "/images/products/Sola
     ],
   },
   {
-    id: 8,
+    id: "8",
     title: "جهاز ضغط طبي",
-    category: "طبي",
+    category: "medical items",
     price_per_hour: 15,
     deposit_amount: 150,
     status: "active",
@@ -201,9 +201,9 @@ images: ["/images/products/Blood_Pressure_Monitor_1.jpg.jpg", "/images/products/
     ],
   },
   {
-    id: 9,
+    id: "9",
     title: "طائرة درون DJI",
-    category: "تصوير",
+    category: "cameras",
     price_per_hour: 70,
     deposit_amount: 600,
     status: "active",
@@ -222,9 +222,9 @@ images: ["/images/products/DJI_Drone_1.jpg.jpg"],    icon: "videocam",
     ],
   },
   {
-    id: 10,
+    id: "10",
     title: "شاشة سامسونج 55",
-    category: "إلكترونيات",
+    category: "electronics",
     price_per_hour: 35,
     deposit_amount: 300,
     status: "active",
@@ -241,9 +241,9 @@ images: ["/images/products/Samsung_55_Inch_TV_1.jpg.jpg", "/images/products/Sams
     ],
   },
   {
-    id: 11,
+    id: "11",
     title: "طابعة ليزر HP",
-    category: "إلكترونيات",
+    category: "electronics",
     price_per_hour: 12,
     deposit_amount: 100,
     status: "active",
@@ -259,9 +259,9 @@ images: ["/images/products/HP_Laser_Printer_1.jpg.jpg"],    icon: "print",
     ],
   },
   {
-    id: 12,
+    id: "12",
     title: "ميكروسكوب ديجيتال",
-    category: "طبي",
+    category: "medical items",
     price_per_hour: 20,
     deposit_amount: 200,
     status: "active",

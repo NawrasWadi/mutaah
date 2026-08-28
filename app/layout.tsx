@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Cairo, Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
-import Chatbot from "@/components/Chatbot";
+import ChatbotWrapper from "@/components/ChatbotWrapper";
 import Footer from "@/components/Footer";
 import { ProductsProvider } from "@/context/ProductsContext";
 import { UserProfileProvider } from "@/context/UserProfileContext";
@@ -47,7 +47,7 @@ export default function RootLayout({
                 {children}
               </div>
               <Footer />
-              <Chatbot />
+              <ChatbotWrapper  />
             </NotificationsProvider>
           </UserProfileProvider>
          </ProductsProvider>

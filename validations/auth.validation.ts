@@ -22,7 +22,9 @@ if (!data.identifier.trim()) {
     errors.identifier = "اسم المستخدم يجب أن يكون 3 حروف على الأقل";
   } else if (/\s/.test(data.identifier)) {
     errors.identifier = "اسم المستخدم لا يجب أن يحتوي على مسافات";
-  } else if (!/^[a-zA-Z\u0600-\u06FF][a-zA-Z0-9\u0600-\u06FF_]*$/.test(data.identifier)) {
+  // ✅ مصححة: توحيد مع validateRegister — إضافة النقطة (.) كحرف مسموح
+  // بنفس القاعدة، لأن أغلب المستخدمين يفصلون الاسم الأول عن الأخير بنقطة
+  } else if (!/^[a-zA-Z\u0600-\u06FF][a-zA-Z0-9\u0600-\u06FF_.]*$/.test(data.identifier)) {
     errors.identifier = "اسم المستخدم يجب أن يبدأ بحرف";
   }
 }
@@ -50,14 +52,24 @@ export const validateRegister = (data: RegisterFormData): RegisterErrors => {
     errors.username = "اسم المستخدم يجب أن يكون 3 حروف على الأقل";
   } else if (/\s/.test(data.username)) {
     errors.username = "اسم المستخدم لا يجب أن يحتوي على مسافات";
-  } else if (!/^[a-zA-Z\u0600-\u06FF][a-zA-Z0-9\u0600-\u06FF_]*$/.test(data.username)) {
-    errors.username = "اسم المستخدم يجب أن يبدأ بحرف";
-  }
+  } else if (!/^[a-zA-Z\u0600-\u06FF][a-zA-Z0-9\u0600-\u06FF_.]*$/.test(data.username)) {
+  errors.username = "اسم المستخدم يجب أن يبدأ بحرف";
+}
 
   if (!data.email.trim()) {
     errors.email = "البريد الإلكتروني مطلوب";
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
     errors.email = "صيغة البريد الإلكتروني غير صحيحة";
+  }
+
+  if (!data.phone.trim()) {
+    errors.phone = "رقم الهاتف مطلوب";
+  } else if (!/^\d+$/.test(data.phone)) {
+    errors.phone = "يجب إدخال أرقام فقط";
+  } else if (data.phone.length !== 10) {
+    errors.phone = "يجب أن يتكون الرقم من 10 خانات";
+  } else if (!data.phone.startsWith("059") && !data.phone.startsWith("056")) {
+    errors.phone = "يجب أن يبدأ الرقم بـ 059 أو 056";
   }
 
   if (!data.governorate)

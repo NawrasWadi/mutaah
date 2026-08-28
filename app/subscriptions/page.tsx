@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { subscriptionsService } from "@/services/subscriptions.service";
 import { queryKeys } from "@/api/queryKeys";
 import { PlanType } from "@/types/subscriptions";
+import { getPlanDisplayInfo, formatPlanPrice } from "@/utils/planDisplay";
 
 export default function SubscriptionsPage() {
   const { data: plans, isLoading: isLoadingPlans } = useQuery({
@@ -60,11 +61,12 @@ export default function SubscriptionsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 max-w-5xl mx-auto items-stretch">
             {plans.map((plan, index) => {
-              const isCurrent = plan.plan_type === currentPlan?.plan_type;
-              const isPlus = plan.plan_type === "plus";
-              const isPro = plan.plan_type === "pro";
+  const isCurrent = plan.plan_type === currentPlan?.plan_type;
+  const display = getPlanDisplayInfo(plan.plan_type, plan);
+  const isPlus = display.isPopular;
+  const isPro = plan.plan_type === "pro";
 
-              return (
+  return (
                 <div
                   key={plan.plan_type || index}
                   className={`relative bg-white p-6 rounded-container flex flex-col transition-all duration-500 hover:shadow-xl ${
@@ -82,20 +84,19 @@ export default function SubscriptionsPage() {
 
                   <div className="text-center mb-6">
                     <span className={`text-xs font-black tracking-wider uppercase ${isPro ? "text-primary" : "text-gray-400"}`}>
-                      {plan.name}
-                    </span>
-                    <div className="mt-3 flex flex-col items-center">
-                      <span className="text-3xl font-black text-gray-800 leading-none">
-                        {plan.price !== "مجاناً" && "₪"}{plan.price}
-                      </span>
-                      {plan.unit && <span className="text-xs text-gray-400 font-bold mt-1">{plan.unit}</span>}
-                    </div>
+  {display.name}
+</span>
+<div className="mt-3 flex flex-col items-center">
+  <span className="text-3xl font-black text-gray-800 leading-none">
+    {formatPlanPrice(plan.price) !== "مجاناً" && "₪"}{formatPlanPrice(plan.price)}
+  </span>
+  {display.unit && <span className="text-xs text-gray-400 font-bold mt-1">{display.unit}</span>}
+</div>
                   </div>
 
                   {/* الميزات */}
                   <div className="flex flex-col gap-3 mb-8 text-right grow">
-                    {plan.features.map((feature, i) => (
-                      <div key={i} className={`flex items-center gap-2 text-xs ${feature.active ? "text-gray-600" : "text-gray-300"}`}>
+{display.features.map((feature, i) => (                      <div key={i} className={`flex items-center gap-2 text-xs ${feature.active ? "text-gray-600" : "text-gray-300"}`}>
                         <span className={`material-symbols-rounded text-base ${feature.active ? "text-green-500" : "text-gray-200"}`}>
                           {feature.active ? "check_circle" : "cancel"}
                         </span>
@@ -105,16 +106,22 @@ export default function SubscriptionsPage() {
                   </div>
 
                   {/* الزر */}
-                  <button
-                    disabled={isCurrent}
-                    className={`w-full py-3 rounded-2xl font-black text-sm transition-all active:scale-95 ${
-                      isCurrent
-                        ? "bg-gray-50 text-gray-400 cursor-not-allowed border border-gray-100"
-                        : "bg-linear-to-r from-primary to-green-harvest text-white shadow-md hover:brightness-105"
-                    }`}
-                  >
-                    {getButtonText(plan.plan_type)}
-                  </button>
+                  {/* الزر */}
+{isCurrent ? (
+  <button
+    disabled
+    className="w-full py-3 rounded-2xl font-black text-sm bg-gray-50 text-gray-400 cursor-not-allowed border border-gray-100"
+  >
+    {getButtonText(plan.plan_type)}
+  </button>
+) : (
+  <Link
+    href={`/subscriptions/checkout/${plan.id}`}
+    className="w-full py-3 rounded-2xl font-black text-sm transition-all active:scale-95 bg-linear-to-r from-primary to-green-harvest text-white shadow-md hover:brightness-105 flex items-center justify-center"
+  >
+    {getButtonText(plan.plan_type)}
+  </Link>
+)}
                 </div>
               );
             })}
