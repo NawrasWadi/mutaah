@@ -1,15 +1,20 @@
+export interface AdminDashboardStats {
+  users_count: number;
+  active_products_count: number;
+  pending_rental_requests_count: number;
+  pending_payments_count: number;
+  pending_subscriptions_count: number;
+  active_subscriptions_count: number;
+  manual_identity_reviews_count: number;
+}
+
+// ✅ مصححة بالكامل حسب اختبار Postman فعلي (2026-08-28)
 export interface AdminDashboardSummary {
-  total_users: number;
-  active_products: number;
-  pending_rental_requests: number;
-  pending_payments: number;
-  pending_subscriptions: number;
-  active_subscriptions: number;
-  manual_identity_reviews: number;
-  recent_rental_requests: unknown[];
-  pending_payments_list: unknown[];
-  pending_subscriptions_list: unknown[];
-  identity_reviews_list: unknown[];
+  stats: AdminDashboardStats;
+  recent_rental_requests: unknown[]; // شكل كامل تفصيلي، نبنيه لاحقاً عند الحاجة
+  pending_payments: AdminPayment[];
+  identity_reviews: unknown[];
+  pending_subscriptions: AdminSubscription[];
 }
 
 export type PaymentStatus = "pending" | "verified" | "failed" | "partially_refunded";

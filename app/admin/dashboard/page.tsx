@@ -12,14 +12,14 @@ export default function AdminDashboardPage() {
   });
 
   const cards = [
-    { label: "إجمالي المستخدمين", value: data?.total_users, icon: "group", color: "text-primary" },
-    { label: "منتجات نشطة", value: data?.active_products, icon: "inventory_2", color: "text-primary" },
-    { label: "طلبات استئجار معلّقة", value: data?.pending_rental_requests, icon: "pending_actions", color: "text-orange-500" },
-    { label: "دفعات بانتظار المراجعة", value: data?.pending_payments, icon: "payments", color: "text-orange-500" },
-    { label: "اشتراكات بانتظار المراجعة", value: data?.pending_subscriptions, icon: "workspace_premium", color: "text-orange-500" },
-    { label: "اشتراكات نشطة", value: data?.active_subscriptions, icon: "verified", color: "text-primary" },
-    { label: "طلبات توثيق يدوية", value: data?.manual_identity_reviews, icon: "shield_person", color: "text-orange-500" },
-  ];
+  { label: "إجمالي المستخدمين", value: data?.stats.users_count, icon: "group", color: "text-primary" },
+  { label: "منتجات نشطة", value: data?.stats.active_products_count, icon: "inventory_2", color: "text-primary" },
+  { label: "طلبات استئجار معلّقة", value: data?.stats.pending_rental_requests_count, icon: "pending_actions", color: "text-orange-500" },
+  { label: "دفعات بانتظار المراجعة", value: data?.stats.pending_payments_count, icon: "payments", color: "text-orange-500" },
+  { label: "اشتراكات بانتظار المراجعة", value: data?.stats.pending_subscriptions_count, icon: "workspace_premium", color: "text-orange-500" },
+  { label: "اشتراكات نشطة", value: data?.stats.active_subscriptions_count, icon: "verified", color: "text-primary" },
+  { label: "طلبات توثيق يدوية", value: data?.stats.manual_identity_reviews_count, icon: "shield_person", color: "text-orange-500" },
+];
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -1,7 +1,11 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useUserProfile } from "@/context/UserProfileContext";
+import { authService } from "@/services/auth.service";
+import { tokenStorage } from "@/utils/tokenStorage";
 
 const menuItems = [
   { label: "حسابي", icon: "account_circle", href: "/profile" },
@@ -11,6 +15,11 @@ const menuItems = [
   { label: "الاشتراكات", icon: "workspace_premium", href: "/subscriptions" },
 ] as const;
 
+// ⭐ قائمة منفصلة كلياً للأدمن — بدون أي روابط خاصة باليوزر العادي
+const adminMenuItems = [
+  { label: "لوحة التحكم", icon: "admin_panel_settings", href: "/admin/dashboard" },
+] as const;
+
 interface UserDropdownProps {
   align?: "left" | "right";
 }
@@ -18,6 +27,24 @@ interface UserDropdownProps {
 export default function UserDropdown({ align = "right" }: UserDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { profile } = useUserProfile();
+const isAdmin = tokenStorage.getRole() === "admin";
+const router = useRouter();
+const queryClient = useQueryClient();
+
+const handleLogout = async () => {
+  setIsOpen(false);
+  try {
+    await authService.logout(); // POST /logout — يبطل التوكن من طرف الباك
+  } catch {
+    // ⚠️ نتجاهل فشل الطلب عمداً (مثلاً توكن منتهي أصلاً) — الهدف
+    // الأساسي هو تسجيل الخروج محلياً بغض النظر عن رد السيرفر
+  } finally {
+    tokenStorage.clear(); // حذف التوكن + الدور محلياً
+    queryClient.clear(); // ✅ تفريغ كل الـ cache (profile, favorites, notifications...)
+                          // حتى لا يظهر بيانات المستخدم القديم لمستخدم جديد يسجل دخول بعده
+    router.push("/login");
+  }
+};
 
   const alignmentClass = align === "left" ? "left-0 origin-top-left" : "right-0 origin-top-right";
 
@@ -49,27 +76,31 @@ export default function UserDropdown({ align = "right" }: UserDropdownProps) {
 
             <div className="p-1">
               {profile ? (
-                <>
-                  {menuItems.map((item) => (
-                    <Link
-                      href={item.href}
-                      key={item.href}
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-xs text-gray-600 cursor-pointer hover:bg-primary-light hover:text-primary transition-colors rounded-lg group"
-                    >
-                      <span className="material-symbols-rounded text-sm text-gray-400 group-hover:text-primary transition-colors">{item.icon}</span>
-                      <span className="font-medium">{item.label}</span>
-                    </Link>
-                  ))}
+  <>
+    {(isAdmin ? adminMenuItems : menuItems).map((item) => (
+      <Link
+        href={item.href}
+        key={item.href}
+        onClick={() => setIsOpen(false)}
+        className="flex items-center gap-3 px-4 py-2.5 text-xs text-gray-600 cursor-pointer hover:bg-primary-light hover:text-primary transition-colors rounded-lg group"
+      >
+        <span className="material-symbols-rounded text-sm text-gray-400 group-hover:text-primary transition-colors">{item.icon}</span>
+        <span className="font-medium">{item.label}</span>
+      </Link>
+    ))}
 
-                  <div className="h-px bg-gray-50 my-1 mx-2"></div>
+    <div className="h-px bg-gray-50 my-1 mx-2"></div>
 
-                  <Link href="/logout" className="flex items-center gap-3 px-4 py-2.5 text-xs text-red-500 cursor-pointer hover:bg-red-50 transition-colors rounded-lg group">
-                    <span className="material-symbols-rounded text-sm">logout</span>
-                    <span className="font-medium">تسجيل خروج</span>
-                  </Link>
-                </>
-              ) : (
+    <button
+      type="button"
+      onClick={handleLogout}
+      className="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-red-500 cursor-pointer hover:bg-red-50 transition-colors rounded-lg group"
+    >
+      <span className="material-symbols-rounded text-sm">logout</span>
+      <span className="font-medium">تسجيل خروج</span>
+    </button>
+  </>
+) : (
                 <Link
                   href="/register"
                   onClick={() => setIsOpen(false)}

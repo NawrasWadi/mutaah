@@ -22,15 +22,15 @@ export default function ProductDetailPage() {
 
   const { toggleFavorite, isFavorite } = useFavorites();
   const { profile } = useUserProfile();
-  // ⚠️ "approved" افتراض مؤقت (نفس الملاحظة المعلّقة من موديول verify-identity)
-  // بانتظار تأكيد رامي: هل الحالة النهائية "verified" أو "approved" أو الاثنين
-// ✅ مصححة نهائياً: is_verified boolean بسيط من GET /profile الفعلي،
-// مش enum identity_status (الذي لا وجود له إطلاقاً بهذا الـ endpoint)
-const isVerified = !!profile?.is_verified;
+  const isVerified = !!profile?.is_verified;
+
   const [product, setProduct] = useState<ProductDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [activeImage, setActiveImage] = useState(0);
+
+  // ✅ التحكم بالشهر المعروض ديناميكياً
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isFullDayBooking, setIsFullDayBooking] = useState(false);
@@ -47,6 +47,14 @@ const isVerified = !!profile?.is_verified;
       try {
         const data = await productService.getProduct(productId);
         setProduct(data);
+
+        // إذا كانت هناك تواريخ متاحة، يتم التوجيه تلقائياً لشهر أول تاريخ متاح
+        if (data?.available_dates && data.available_dates.length > 0) {
+          const firstDate = new Date(data.available_dates[0]);
+          if (!isNaN(firstDate.getTime())) {
+            setCurrentDate(new Date(firstDate.getFullYear(), firstDate.getMonth(), 1));
+          }
+        }
       } catch (error) {
         setLoadError("تعذّر تحميل بيانات المنتج");
       } finally {
@@ -56,38 +64,35 @@ const isVerified = !!profile?.is_verified;
     loadProduct();
   }, [productId]);
 
-  // ✅ مصححة: available_dates array من نصوص تواريخ بسيطة، مش objects.
-  // نستخدم Set للبحث السريع بدل Map (ما في بيانات إضافية لكل تاريخ الآن).
   const availableDatesSet = new Set(product?.available_dates ?? []);
-
-  // ⚠️ قرار مؤقت: لا يوجد حقل "is_booked" بالـ API حالياً — كل تاريخ
-  // موجود بـ available_dates يُعرض كمتاح بالكامل، بدون استثناء التواريخ
-  // المحجوزة فعلياً عبر rental-requests مقبولة. يحتاج قرار لاحق: إما
-  // مقارنة يدوية مع rental-requests، أو انتظار حقل إضافي من رامي.
-
-  // ✅ الآن حقل واحد على مستوى المنتج كامل، مش لكل يوم لحاله
   const isAllDay = !!product?.is_all_day;
 
-  // ✅ نطاق الساعات المسموحة محسوب من start_time/end_time الخاصين
-  // بالمنتج كامل (مش لكل يوم)، بدل ALL_HOURS الثابتة سابقاً
+  // ✅ حساب نطاق الساعات المسموحة مع معالجة حماية القيم الفارغة
   const allowedHours = (() => {
     if (!product || isAllDay) return getAllHours();
+    if (!product.start_time || !product.end_time) return getAllHours();
+
     const result: { hour: number; period: "ص" | "م" }[] = [];
+    const cleanStart = product.start_time.slice(0, 5);
+    const cleanEnd = product.end_time.slice(0, 5);
+
     for (let h = 0; h < 24; h++) {
       const time24 = `${String(h).padStart(2, "0")}:00`;
-      if (time24 >= product.start_time && time24 <= product.end_time) {
+      if (time24 >= cleanStart && time24 <= cleanEnd) {
         result.push(from24Hour(time24));
       }
     }
-    return result;
+    return result.length > 0 ? result : getAllHours();
   })();
 
-  const today = new Date();
-const year = today.getFullYear();
-const monthIndex = today.getMonth();
+  const year = currentDate.getFullYear();
+  const monthIndex = currentDate.getMonth();
 
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const firstDayOffset = new Date(year, monthIndex, 1).getDay();
+
+  const handlePrevMonth = () => setCurrentDate(new Date(year, monthIndex - 1, 1));
+  const handleNextMonth = () => setCurrentDate(new Date(year, monthIndex + 1, 1));
 
   const calendarCells: { day: number; isoDate: string }[] = [];
   for (let d = 1; d <= daysInMonth; d++) {
@@ -230,9 +235,7 @@ const monthIndex = today.getMonth();
                   <span className="material-symbols-rounded text-primary text-base">person</span>
                 </div>
                 <div>
-                  {/* ✅ مصححة: product.owner.full_name بدل owner_full_name */}
                   <p className="text-xs font-bold text-gray-800">{product.owner.full_name}</p>
-                  {/* ✅ مصححة: product.owner.is_verified (boolean) بدل owner_identity_status enum */}
                   {product.owner.is_verified && (
                     <p className="text-xs text-primary flex items-center gap-0.5">
                       <span className="material-symbols-rounded text-xs">verified</span> موثق
@@ -271,14 +274,22 @@ const monthIndex = today.getMonth();
               </div>
             )}
 
-            {/* الكاليندر — اختيار يوم واحد بس من available_dates */}
+            {/* ✅ تقويم مع أسهم التنقل بين الأشهر */}
             <div className="bg-white rounded-card border border-gray-100 p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-black text-gray-800 flex items-center gap-1">
                   <span className="material-symbols-rounded text-primary text-sm">calendar_today</span>
                   اختر يوم الاستئجار
                 </h3>
-                <span className="text-xs text-gray-400">{MONTH_NAMES[monthIndex]} {year}</span>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={handleNextMonth} className="p-1 hover:bg-gray-100 rounded-full transition-all">
+                    <span className="material-symbols-rounded text-gray-600 text-base">chevron_right</span>
+                  </button>
+                  <span className="text-xs font-bold text-gray-800">{MONTH_NAMES[monthIndex]} {year}</span>
+                  <button type="button" onClick={handlePrevMonth} className="p-1 hover:bg-gray-100 rounded-full transition-all">
+                    <span className="material-symbols-rounded text-gray-600 text-base">chevron_left</span>
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-7 gap-1 mb-2">
@@ -290,14 +301,12 @@ const monthIndex = today.getMonth();
               <div className="grid grid-cols-7 gap-1">
                 {Array.from({ length: firstDayOffset }).map((_, i) => <div key={`empty-${i}`}></div>)}
                 {calendarCells.map(({ day, isoDate }) => {
-                  // ✅ مصححة: مجرد فحص وجود بالـ Set، بدون تمييز محجوز
-                  // (قرار مؤقت — لا يوجد حقل is_booked بالـ API حالياً)
                   const isAvailable = availableDatesSet.has(isoDate);
                   const isSelected = selectedDate === isoDate;
 
                   let cellClass = "text-gray-300 cursor-not-allowed";
-                  if (isSelected) cellClass = "bg-primary text-white";
-                  else if (isAvailable) cellClass = "bg-primary-light text-gray-700 hover:bg-primary/20";
+                  if (isSelected) cellClass = "bg-primary text-white font-bold shadow-md scale-105";
+                  else if (isAvailable) cellClass = "bg-primary-light text-gray-700 font-bold hover:bg-primary/20 cursor-pointer";
 
                   return (
                     <button
@@ -305,7 +314,7 @@ const monthIndex = today.getMonth();
                       type="button"
                       disabled={!isAvailable}
                       onClick={() => selectDay(isoDate)}
-                      className={`aspect-square rounded-full text-xs font-bold transition-all ${cellClass}`}
+                      className={`aspect-square rounded-full text-xs transition-all ${cellClass}`}
                     >
                       {day}
                     </button>
@@ -313,8 +322,6 @@ const monthIndex = today.getMonth();
                 })}
               </div>
 
-              {/* ⚠️ إزالة مؤقتة لتوضيح "محجوز" من legend، بما إنه لا يوجد
-                  تمييز فعلي بين متاح وغير متاح ومحجوز حالياً بالبيانات */}
               <div className="flex items-center gap-3 mt-3 text-xs text-gray-400 flex-wrap">
                 <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-primary-light border border-primary"></span> متاح</span>
                 <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-primary"></span> مختار</span>
@@ -322,30 +329,37 @@ const monthIndex = today.getMonth();
               </div>
             </div>
 
-            {/* خيارات الحجز — نفس الساعات لليوم المختار، أو اليوم كامل.
-                ✅ isAllDay الآن حقل واحد على مستوى المنتج (product.is_all_day)،
-                مش محسوب لكل يوم لحاله كالسابق */}
+            {/* ✅ خيارات الحجز والأوقات */}
             {selectedDate && (
               <div className="bg-white rounded-card border border-gray-100 p-4 space-y-3">
-                {!isAllDay && (
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isFullDayBooking}
-                      onChange={(e) => setIsFullDayBooking(e.target.checked)}
-                      className="w-4 h-4 accent-primary"
-                    />
-                    <span className="text-xs font-bold text-gray-700">حجز خلال جميع ساعات هذا اليوم (24 ساعة)</span>
-                  </label>
-                )}
-
-                {!isFullDayBooking && !isAllDay && (
+                {isAllDay ? (
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-center">
+                    <p className="text-xs font-bold text-primary">هذا المنتج متاح طوال اليوم (24 ساعة) لليوم المختار</p>
+                  </div>
+                ) : (
                   <>
-                    <p className="text-xs text-gray-400 font-bold">ساعة البداية</p>
-                    <HourPeriodSelect value={startTime} onChange={setStartTime} allowedHours={allowedHours} />
+                    <label className="flex items-center gap-2 cursor-pointer bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                      <input
+                        type="checkbox"
+                        checked={isFullDayBooking}
+                        onChange={(e) => setIsFullDayBooking(e.target.checked)}
+                        className="w-4 h-4 accent-primary"
+                      />
+                      <span className="text-xs font-bold text-gray-700">حجز خلال جميع ساعات هذا اليوم (24 ساعة)</span>
+                    </label>
 
-                    <p className="text-xs text-gray-400 font-bold">ساعة النهاية</p>
-                    <HourPeriodSelect value={endTime} onChange={setEndTime} allowedHours={allowedHours} />
+                    {!isFullDayBooking && (
+                      <div className="space-y-3 pt-1">
+                        <div>
+                          <p className="text-xs text-gray-500 font-bold mb-1">ساعة البداية</p>
+                          <HourPeriodSelect value={startTime} onChange={setStartTime} allowedHours={allowedHours} />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 font-bold mb-1">ساعة النهاية</p>
+                          <HourPeriodSelect value={endTime} onChange={setEndTime} allowedHours={allowedHours} />
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
               </div>

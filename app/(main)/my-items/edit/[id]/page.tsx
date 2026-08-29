@@ -71,8 +71,7 @@ export default function EditProductPage() {
     calendarCells.push({ day: d, isoDate });
   }
 
-  const availableByDate = new Map((product?.available_dates ?? []).map((d) => [d.date, d]));
-
+const availableByDate = new Map((product?.available_dates ?? []).map((d) => [d, d]));
   const toggleSelectDay = (isoDate: string) => {
     setSelectedDates((prev) =>
       prev.includes(isoDate) ? prev.filter((d) => d !== isoDate) : [...prev, isoDate]

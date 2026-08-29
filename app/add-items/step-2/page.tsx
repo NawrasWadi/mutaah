@@ -16,6 +16,10 @@ export default function AddProductStep2Page() {
   const router = useRouter();
   const { formData, resetFormData } = useAddProduct();
 
+  // ✅ استخدام تاريخ اليوم ديناميكياً بدل التثبيت على 2025
+  const today = new Date();
+  const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [isFullDayAvailability, setIsFullDayAvailability] = useState(false);
   const [sharedStart, setSharedStart] = useState<TimeValue>({ hour: null, period: null });
@@ -24,10 +28,20 @@ export default function AddProductStep2Page() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  const year = 2025;
-  const monthIndex = 4;
+  const year = currentDate.getFullYear();
+  const monthIndex = currentDate.getMonth();
+
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const firstDayOffset = new Date(year, monthIndex, 1).getDay();
+
+  // ✅ التنقل بين الأشهر
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(year, monthIndex - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(year, monthIndex + 1, 1));
+  };
 
   const calendarCells: { day: number; isoDate: string }[] = [];
   for (let d = 1; d <= daysInMonth; d++) {
@@ -41,7 +55,6 @@ export default function AddProductStep2Page() {
     );
   };
 
-  // متاح إذا: فيه أيام مختارة، و(إما "كل اليوم" مفعّلة أو الساعتين مكتملتين)
   const isAvailabilityComplete =
     selectedDates.length > 0 &&
     (isFullDayAvailability || (isTimeComplete(sharedStart) && isTimeComplete(sharedEnd)));
@@ -54,6 +67,10 @@ export default function AddProductStep2Page() {
     setSubmitError("");
     setIsSubmitting(true);
     try {
+      // ✅ ضبط التنسيق ليطابق متطلبات API بالكامل
+      const startTimeFormatted = to24Hour(sharedStart.hour as number, sharedStart.period as "ص" | "م") + ":00";
+      const endTimeFormatted = to24Hour(sharedEnd.hour as number, sharedEnd.period as "ص" | "م") + ":00";
+
       await productService.createProduct({
         title: formData.title,
         category: formData.category,
@@ -63,12 +80,11 @@ export default function AddProductStep2Page() {
         images: formData.product_images,
         available_dates: selectedDates,
         is_all_day: isFullDayAvailability,
-        // start_time/end_time اختياريين حسب التوثيق — لا نرسلهم إذا "كل اليوم"
         ...(isFullDayAvailability
           ? {}
           : {
-              start_time: to24Hour(sharedStart.hour as number, sharedStart.period as "ص" | "م"),
-              end_time: to24Hour(sharedEnd.hour as number, sharedEnd.period as "ص" | "م"),
+              start_time: startTimeFormatted,
+              end_time: endTimeFormatted,
             }),
       });
 
@@ -87,7 +103,6 @@ export default function AddProductStep2Page() {
 
   return (
     <div className="min-h-screen flex flex-col bg-bg-page">
-
       <header className="h-14 flex items-center justify-between px-6 border-b border-gray-100 bg-white sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <Link href="/add-items/step-1" className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary transition-all border border-gray-100">
@@ -101,8 +116,7 @@ export default function AddProductStep2Page() {
 
       <main className="grow flex items-center justify-center p-4">
         <div className="bg-white w-full max-w-xl rounded-card p-5 md:p-6 shadow-sm border border-gray-100">
-
-          {/* شريط الخطوات */}
+          
           <div className="flex items-center justify-center mb-6">
             <div className="flex flex-col items-center gap-1">
               <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
@@ -118,8 +132,6 @@ export default function AddProductStep2Page() {
           </div>
 
           <div className="space-y-4 text-right">
-
-            {/* الكاليندر */}
             <div className="space-y-1.5">
               <label className="flex items-center gap-1 text-xs font-bold text-gray-500">
                 <span className="material-symbols-rounded text-primary text-sm">calendar_month</span>
@@ -127,10 +139,15 @@ export default function AddProductStep2Page() {
               </label>
 
               <div className="border border-gray-100 rounded-xl p-3">
+                {/* ✅ تم تفعيل أزرار التنقل بين الأشهر */}
                 <div className="flex items-center justify-between mb-3">
-                  <span className="material-symbols-rounded text-gray-400 text-base">chevron_right</span>
+                  <button type="button" onClick={handleNextMonth} className="p-1 hover:bg-gray-100 rounded-full">
+                    <span className="material-symbols-rounded text-gray-600 text-base">chevron_right</span>
+                  </button>
                   <span className="text-xs font-bold text-gray-800">{MONTH_NAMES[monthIndex]} {year}</span>
-                  <span className="material-symbols-rounded text-gray-400 text-base">chevron_left</span>
+                  <button type="button" onClick={handlePrevMonth} className="p-1 hover:bg-gray-100 rounded-full">
+                    <span className="material-symbols-rounded text-gray-600 text-base">chevron_left</span>
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-7 gap-1 mb-2">
@@ -160,10 +177,8 @@ export default function AddProductStep2Page() {
               </div>
             </div>
 
-            {/* خيارات الإتاحة — ساعات واحدة تُطبّق على كل الأيام المختارة (مطابق للتوثيق) */}
             {selectedDates.length > 0 && (
               <div className="space-y-3 border-t border-gray-100 pt-3">
-
                 <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-100 rounded-xl p-3">
                   <input
                     type="checkbox"
@@ -186,11 +201,10 @@ export default function AddProductStep2Page() {
               </div>
             )}
 
-            {/* ملاحظة تنبيهية */}
             <div className="bg-amber-50 border-r-4 border-amber-400 rounded-xl p-3 flex items-start gap-2">
               <span className="material-symbols-rounded text-amber-500 text-base">info</span>
               <p className="text-xs text-amber-800 leading-relaxed">
-                <strong>ملاحظة هامة:</strong> المنتج سيكون متاحاً للاستئجار لمدة شهر واحد فقط من تاريخ النشر. بعد انتهاء الشهر، سيتعين عليك تحديث وقت الإتاحة من صفحة تعديل المنتج.
+                <strong>ملاحظة هامة:</strong> سيتم نشر التواريخ المحددة للمؤجرين بشكل ديناميكي بناءً على التقويم الحالي.
               </p>
             </div>
 
@@ -198,7 +212,6 @@ export default function AddProductStep2Page() {
               <p className="text-red-500 text-xs text-center font-bold">{submitError}</p>
             )}
 
-            {/* أزرار التحكم */}
             <div className="flex gap-3">
               <button
                 type="button"
@@ -219,63 +232,9 @@ export default function AddProductStep2Page() {
                 {isSubmitting ? "جارِ النشر..." : "حفظ ونشر المنتج"}
               </button>
             </div>
-
           </div>
         </div>
       </main>
     </div>
   );
 }
-
-/* ============================================================
-   🗄️ مرجع معطّل — ميزة "ساعات مختلفة لكل يوم على حدة"
-   غير مدعومة من الـ API حالياً (start_time/end_time حقلين وحيدين
-   لكل الطلب، مش لكل يوم). محفوظة هون لو الباك ضاف الدعم مستقبلاً.
-   ============================================================
-
-const [sameHoursForAllDays, setSameHoursForAllDays] = useState(false);
-const [perDaySlots, setPerDaySlots] = useState<Record<string, { start: TimeValue; end: TimeValue }>>({});
-
-// داخل toggleSelectDay، كان فيه أيضاً:
-// setSameHoursForAllDays(false);
-// setPerDaySlots({});
-
-// شرط الإكمال القديم:
-// const isAvailabilityComplete =
-//   selectedDates.length > 0 &&
-//   (isFullDayAvailability ||
-//     (sameHoursForAllDays && isTimeComplete(sharedStart) && isTimeComplete(sharedEnd)) ||
-//     (!sameHoursForAllDays &&
-//       selectedDates.every(
-//         (d) =>
-//           isTimeComplete(perDaySlots[d]?.start || { hour: null, period: null }) &&
-//           isTimeComplete(perDaySlots[d]?.end || { hour: null, period: null })
-//       )));
-
-// الـ JSX القديم لتحديد ساعات كل يوم لحاله:
-// {!isFullDayAvailability && !sameHoursForAllDays && (
-//   <div className="space-y-2 pt-2 border-t border-gray-100">
-//     <p className="text-xs font-bold text-gray-700">أو حدد ساعات كل يوم على حدة:</p>
-//     {selectedDates.map((date) => {
-//       const daySlot = perDaySlots[date] || { start: { hour: null, period: null }, end: { hour: null, period: null } };
-//       return (
-//         <div key={date} className="border border-gray-100 rounded-lg p-2.5 space-y-2">
-//           <p className="text-xs font-bold text-gray-700">{date}</p>
-//           <p className="text-xs text-gray-400 font-bold">من الساعة</p>
-//           <HourPeriodSelect
-//             value={daySlot.start}
-//             onChange={(val) => setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, start: val } }))}
-//             allowedHours={ALL_HOURS}
-//           />
-//           <p className="text-xs text-gray-400 font-bold">إلى الساعة</p>
-//           <HourPeriodSelect
-//             value={daySlot.end}
-//             onChange={(val) => setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, end: val } }))}
-//             allowedHours={ALL_HOURS}
-//           />
-//         </div>
-//       );
-//     })}
-//   </div>
-// )}
-============================================================ */

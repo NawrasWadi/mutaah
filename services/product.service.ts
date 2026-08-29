@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/client";
-import { PublicProduct, ProductDetails } from "@/types/product";
+import { PublicProduct, ProductDetails , MyProduct } from "@/types/product";
 
 export interface PaginatedProducts {
   data: PublicProduct[];
@@ -42,8 +42,11 @@ export const productService = {
 
   // ✅ مؤكد من اختبار Postman فعلي: GET /products?owner=me يرجع منتجات
 // المستخدم الحالي بنفس شكل الرد العام (data array مباشرة، بدون pagination إضافي)
-getMyProducts: async (): Promise<PublicProduct[]> => {
-  const res = await apiClient.get("/products", { params: { owner: "me" } });
+getMyProducts: async (): Promise<MyProduct[]> => {
+  // إضافة status: "all" لضمان إرجاع المنتجات المجمدة والنشطة معاً
+  const res = await apiClient.get("/products", { 
+    params: { owner: "me", status: "all" } 
+  });
   return res.data.data;
 },
 

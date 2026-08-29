@@ -8,7 +8,6 @@ import { useFavorites } from "@/context/FavoritesContext";
 import MyItemCard from "@/components/MyItemCard";
 import ProductCard from "@/components/ProductCard";
 import UserDropdown from "@/components/UserDropdown";
-import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { rentalService } from "@/services/rental.service";
 import { queryKeys } from "@/api/queryKeys";
@@ -20,23 +19,24 @@ export default function ManageItemsPage() {
   const [myItems, setMyItems] = useState<MyProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [actionError, setActionError] = useState("");
-  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
 
   const { data: rentalRequests } = useQuery({
-    queryKey: queryKeys.rentalRequests,
-    queryFn: rentalService.getMyRequests,
-  });
-  const pendingRequestsCount = rentalRequests?.filter((r) => r.owner_status === "pending").length ?? 0;
+  queryKey: queryKeys.rentalRequests,
+  queryFn: rentalService.getAllRelatedRequests,
+});
+  
+  const pendingRequestsCount = 
+    rentalRequests?.filter((r: { owner_status?: string }) => r.owner_status === "pending").length ?? 0;
 
   const { favoriteProducts, clearFavorites } = useFavorites();
 
-  // ⚠️ مؤقتاً: بدون دمج مع ProductsContext (الـ Context لسا شغال على mock
-  // ومعرّفاته ما بتطابق معرّفات المنتجات الحقيقية من الـ API، فالدمج كان
-  // بدون أي فائدة فعلية). myItems الآن هو مصدر الحقيقة الوحيد.
-  const rentedItems = myItems.filter((item) => item.is_currently_rented);
-  const activeItemsCount = myItems.filter((item) => item.status === "active").length;
-
-  useEffect(() => {
+  // تصفية المنتجات بشكل صحيح لعرض العناصر ومؤشر الإحصائيات
+  const rentedItems = myItems.filter((item: MyProduct) => item.is_currently_rented);
+  // ✅ التعديل الصحيح (عرض جميع العناصر واستخدام is_active لحساب النشطة)
+const displayedItems = myItems.filter((item: MyProduct) => item.status === "active" || item.status === "frozen");
+const activeItemsCount = myItems.filter((item: MyProduct) => item.status === "active").length;
+  
+useEffect(() => {
     const loadInitialData = async () => {
       setIsLoading(true);
       try {
@@ -55,9 +55,9 @@ export default function ManageItemsPage() {
     router.push(`/my-items/edit/${id}`);
   };
 
+ // ❌ الكود الحالي (من السطر 49 إلى 64)
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     setActionError("");
-    setPendingActionId(id);
     try {
       await productService.toggleProductStatus(id);
       const newStatus = currentStatus === "frozen" ? "active" : "frozen";
@@ -70,8 +70,6 @@ export default function ManageItemsPage() {
           ? error.response?.data?.message
           : "تعذّر تغيير حالة المنتج";
       setActionError(message || "تعذّر تغيير حالة المنتج");
-    } finally {
-      setPendingActionId(null);
     }
   };
 
@@ -80,19 +78,15 @@ export default function ManageItemsPage() {
     if (!confirmed) return;
 
     setActionError("");
-    setPendingActionId(id);
     try {
       await productService.deleteProduct(id);
       setMyItems((prev) => prev.filter((item) => item.id !== id));
     } catch (error) {
-      // ⚠️ الباك بيرجع 409 لو في إيجار مقبول حالي/مستقبلي على نفس المنتج
       const message =
         error instanceof AxiosError
           ? error.response?.data?.message
           : "تعذّر حذف المنتج";
       setActionError(message || "تعذّر حذف المنتج");
-    } finally {
-      setPendingActionId(null);
     }
   };
 
@@ -104,13 +98,12 @@ export default function ManageItemsPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-xs">
-
       <header className="h-14 flex items-center justify-between px-6 border-b border-gray-100 bg-white sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <Link href="/dashboard" className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary transition-all border border-gray-100">
             <span className="material-symbols-rounded text-lg">arrow_forward</span>
           </Link>
-          <div className="text-lg font-black text-gray-800 tracking-tight">ادارة عناصري</div>
+          <div className="text-lg font-black text-gray-800 tracking-tight">إدارة عناصري</div>
         </div>
         <div className="text-xl font-black text-primary italic select-none">مُتاح</div>
         <div className="flex items-center gap-2">
@@ -122,7 +115,6 @@ export default function ManageItemsPage() {
       </header>
 
       <main className="grow max-w-4xl mx-auto w-full p-3 md:p-4">
-
         {/* إحصائيات */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {stats.map((s, i) => (
@@ -168,7 +160,7 @@ export default function ManageItemsPage() {
           </div>
         )}
 
-        {/* رسالة خطأ عامة لأي فعل (حذف/تجميد) فشل */}
+        {/* رسالة خطأ عامة */}
         {actionError && (
           <div className="bg-red-50 border border-red-100 text-red-500 text-xs font-bold p-2.5 rounded-xl mb-4 text-center">
             {actionError}
@@ -187,6 +179,7 @@ export default function ManageItemsPage() {
               </button>
             </div>
           )}
+
           {activeTab === 2 ? (
             favoriteProducts.length > 0 ? (
               <div className="grid grid-cols-2 gap-3">
@@ -204,8 +197,8 @@ export default function ManageItemsPage() {
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
               <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">جاري جلب البيانات</p>
             </div>
-          ) : activeTab === 0 && myItems.length > 0 ? (
-            myItems.map((item) => (
+          ) : activeTab === 0 && displayedItems.length > 0 ? (
+            displayedItems.map((item) => (
               <MyItemCard
                 key={item.id}
                 product={item}
@@ -230,9 +223,7 @@ export default function ManageItemsPage() {
             </div>
           )}
         </div>
-
       </main>
-
     </div>
   );
 }

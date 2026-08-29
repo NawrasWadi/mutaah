@@ -34,10 +34,13 @@ export interface PublicProduct extends BaseProduct {
 // ===== منتج اليوزر بصفحة "إدارة عناصري" =====
 export interface MyProduct extends BaseProduct {
   deposit_amount: number;
-  rental_count: number;
+  rental_count?: number; // جعلناه optional لأن الـ API لا يرجعه بـ GET /products?owner=me
   rating?: number;
   expiry_date?: string;
   is_currently_rented?: boolean;
+  primary_image?: string;
+  description?: string;
+  location?: ProductLocation;
 }
 
 export interface RentedItem extends MyProduct {
