@@ -21,6 +21,8 @@ export interface PaginatedProducts {
 interface GetProductsParams {
   page?: number;
   category?: string;
+    search?: string;
+
 }
 
 interface CreateProductPayload {
