@@ -132,7 +132,7 @@ export default function SubscriptionsPage() {
           </p>
         </section>
       </main>
- <Footer />
+ 
     </div>
   );
 }
