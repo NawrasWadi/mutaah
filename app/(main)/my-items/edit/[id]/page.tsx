@@ -10,7 +10,7 @@ import { getCategoryLabel } from "@/utils/productCategory";
 import UserDropdown from "@/components/UserDropdown";
 import HourPeriodSelect from "@/components/HourPeriodSelect";
 import { MONTH_NAMES, DAY_LABELS } from "@/utils/calendar";
-import { TimeValue, isTimeComplete, to24Hour, getAllHours } from "@/utils/time";
+import { TimeValue, isTimeComplete, to24Hour, from24Hour, getAllHours } from "@/utils/time";
 
 type ImageSlot = string | File;
 const ALL_HOURS = getAllHours();
@@ -30,6 +30,9 @@ export default function EditProductPage() {
   const [pricePerHour, setPricePerHour] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
   const [images, setImages] = useState<ImageSlot[]>([]);
+
+  // ⭐ التحكم بالشهر المعروض ديناميكياً (نفس نمط صفحة تفاصيل المنتج)
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [isFullDayAvailability, setIsFullDayAvailability] = useState(false);
@@ -51,6 +54,22 @@ export default function EditProductPage() {
         setPricePerHour(String(data.price_per_hour));
         setDepositAmount(String(data.deposit_amount));
         setImages(data.product_images);
+
+        // ⭐ تعبئة الحالة الحالية للمنتج بدل ما تفضل فاضية
+        setSelectedDates(data.available_dates ?? []);
+        setIsFullDayAvailability(!!data.is_all_day);
+        if (!data.is_all_day && data.start_time && data.end_time) {
+          setSharedStart(from24Hour(data.start_time.slice(0, 5)));
+          setSharedEnd(from24Hour(data.end_time.slice(0, 5)));
+        }
+
+        // ⭐ توجيه التقويم تلقائياً لشهر أول تاريخ متاح موجود فعلاً
+        if (data.available_dates && data.available_dates.length > 0) {
+          const firstDate = new Date(data.available_dates[0]);
+          if (!isNaN(firstDate.getTime())) {
+            setCurrentDate(new Date(firstDate.getFullYear(), firstDate.getMonth(), 1));
+          }
+        }
       } catch (error) {
         setLoadError("تعذّر تحميل بيانات المنتج");
       } finally {
@@ -60,10 +79,13 @@ export default function EditProductPage() {
     loadProduct();
   }, [productId]);
 
-  const year = 2025;
-  const monthIndex = 4;
+  const year = currentDate.getFullYear();
+  const monthIndex = currentDate.getMonth();
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const firstDayOffset = new Date(year, monthIndex, 1).getDay();
+
+  const handlePrevMonth = () => setCurrentDate(new Date(year, monthIndex - 1, 1));
+  const handleNextMonth = () => setCurrentDate(new Date(year, monthIndex + 1, 1));
 
   const calendarCells: { day: number; isoDate: string }[] = [];
   for (let d = 1; d <= daysInMonth; d++) {
@@ -71,7 +93,6 @@ export default function EditProductPage() {
     calendarCells.push({ day: d, isoDate });
   }
 
-const availableByDate = new Map((product?.available_dates ?? []).map((d) => [d, d]));
   const toggleSelectDay = (isoDate: string) => {
     setSelectedDates((prev) =>
       prev.includes(isoDate) ? prev.filter((d) => d !== isoDate) : [...prev, isoDate]
@@ -124,8 +145,15 @@ const availableByDate = new Map((product?.available_dates ?? []).map((d) => [d, 
         price_per_hour: pricePerHour,
         deposit_amount: depositAmount,
         images: newImages,
-        available_dates: selectedDates.length > 0 ? selectedDates : undefined,
-        is_all_day: selectedDates.length > 0 ? isFullDayAvailability : undefined,
+        available_dates: selectedDates,
+        is_all_day: isFullDayAvailability,
+        ...(isFullDayAvailability
+  ? {}
+  : {
+      start_time: to24Hour(sharedStart.hour as number, sharedStart.period as "ص" | "م") + ":00",
+      end_time: to24Hour(sharedEnd.hour as number, sharedEnd.period as "ص" | "م") + ":00",
+    }),
+    
       });
       router.push("/my-items");
     } catch (error) {
@@ -301,16 +329,22 @@ const availableByDate = new Map((product?.available_dates ?? []).map((d) => [d, 
 
             <div className="h-px bg-gray-100"></div>
 
-            {/* الكاليندر — تحديث الأيام المتاحة (اختياري) */}
+            {/* الكاليندر — الأيام المتاحة الحالية معروضة ديناميكياً */}
             <div className="space-y-1.5">
               <label className="flex items-center gap-1 text-xs font-bold text-gray-500">
                 <span className="material-symbols-rounded text-primary text-sm">calendar_today</span>
-                تحديث الأيام المتاحة (اختياري — اتركها فارغة للإبقاء على الحالي)
+                الأيام المتاحة (الأيام المختارة حالياً محددة باللون)
               </label>
 
               <div className="border border-gray-100 rounded-xl p-3">
                 <div className="flex items-center justify-between mb-3">
+                  <button type="button" onClick={handleNextMonth} className="p-1 hover:bg-gray-100 rounded-full transition-all">
+                    <span className="material-symbols-rounded text-gray-600 text-base">chevron_right</span>
+                  </button>
                   <span className="text-xs font-bold text-gray-800">{MONTH_NAMES[monthIndex]} {year}</span>
+                  <button type="button" onClick={handlePrevMonth} className="p-1 hover:bg-gray-100 rounded-full transition-all">
+                    <span className="material-symbols-rounded text-gray-600 text-base">chevron_left</span>
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-7 gap-1 mb-2">
@@ -329,7 +363,7 @@ const availableByDate = new Map((product?.available_dates ?? []).map((d) => [d, 
                         type="button"
                         onClick={() => toggleSelectDay(isoDate)}
                         className={`aspect-square rounded-full text-xs font-bold transition-all ${
-                          isSelected ? "bg-primary text-white" : "bg-primary-light text-gray-700 hover:bg-primary/20"
+                          isSelected ? "bg-primary text-white shadow-sm" : "bg-primary-light text-gray-700 hover:bg-primary/20"
                         }`}
                       >
                         {day}
@@ -366,7 +400,6 @@ const availableByDate = new Map((product?.available_dates ?? []).map((d) => [d, 
 
             {saveError && <p className="text-red-500 text-xs text-center font-bold">{saveError}</p>}
 
-            {/* الأزرار */}
             <div className="flex gap-3 pt-2">
               <Link
                 href="/my-items"
@@ -392,55 +425,3 @@ const availableByDate = new Map((product?.available_dates ?? []).map((d) => [d, 
     </div>
   );
 }
-/* ============================================================
-   🗄️ مرجع معطّل — ميزة "ساعات مختلفة لكل يوم على حدة"
-   غير مدعومة من الـ API حالياً (start_time/end_time حقلين وحيدين
-   لكل الطلب، مش لكل يوم). محفوظة هون لو الباك ضاف الدعم مستقبلاً.
-   ============================================================
-
-const [sameHoursForAllDays, setSameHoursForAllDays] = useState(false);
-const [perDaySlots, setPerDaySlots] = useState<Record<string, { start: TimeValue; end: TimeValue }>>({});
-
-// داخل toggleSelectDay، كان فيه أيضاً:
-// setSameHoursForAllDays(false);
-// setPerDaySlots({});
-
-// شرط الإكمال القديم:
-// const isAvailabilityComplete =
-//   selectedDates.length > 0 &&
-//   (isFullDayAvailability ||
-//     (sameHoursForAllDays && isTimeComplete(sharedStart) && isTimeComplete(sharedEnd)) ||
-//     (!sameHoursForAllDays &&
-//       selectedDates.every(
-//         (d) =>
-//           isTimeComplete(perDaySlots[d]?.start || { hour: null, period: null }) &&
-//           isTimeComplete(perDaySlots[d]?.end || { hour: null, period: null })
-//       )));
-
-// الـ JSX القديم لتحديد ساعات كل يوم لحاله:
-// {!isFullDayAvailability && !sameHoursForAllDays && (
-//   <div className="space-y-2 pt-2 border-t border-gray-100">
-//     <p className="text-xs font-bold text-gray-700">أو حدد ساعات كل يوم على حدة:</p>
-//     {selectedDates.map((date) => {
-//       const daySlot = perDaySlots[date] || { start: { hour: null, period: null }, end: { hour: null, period: null } };
-//       return (
-//         <div key={date} className="border border-gray-100 rounded-lg p-2.5 space-y-2">
-//           <p className="text-xs font-bold text-gray-700">{date}</p>
-//           <p className="text-xs text-gray-400 font-bold">من الساعة</p>
-//           <HourPeriodSelect
-//             value={daySlot.start}
-//             onChange={(val) => setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, start: val } }))}
-//             allowedHours={ALL_HOURS}
-//           />
-//           <p className="text-xs text-gray-400 font-bold">إلى الساعة</p>
-//           <HourPeriodSelect
-//             value={daySlot.end}
-//             onChange={(val) => setPerDaySlots((prev) => ({ ...prev, [date]: { ...daySlot, end: val } }))}
-//             allowedHours={ALL_HOURS}
-//           />
-//         </div>
-//       );
-//     })}
-//   </div>
-// )}
-============================================================ */
