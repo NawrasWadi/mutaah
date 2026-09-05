@@ -2,11 +2,10 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/context/UserProfileContext";
-import { tokenStorage } from "@/utils/tokenStorage";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
  const { profile, isLoading } = useUserProfile();
-const role = tokenStorage.getRole();
+const role = profile?.role;
 
 useEffect(() => {
   if (!isLoading && profile && role !== "admin") {
