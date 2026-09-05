@@ -45,6 +45,7 @@ export interface UserProfile {
   avatar: string | null;
   is_verified: boolean;
   subscription_plan: string;
+    role?: "user" | "admin";
   stats: UserStats;
 }
 
