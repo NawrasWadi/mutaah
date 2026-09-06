@@ -1,7 +1,6 @@
 "use client";
 import { useNotifications } from "@/context/NotificationsContext";
 import Link from "next/link";
-import Footer from "@/components/Footer";
 import UserDropdown from "@/components/UserDropdown";
 import { NotificationType } from "@/types/notifications";
 
@@ -100,7 +99,7 @@ const formatNotificationDate = (isoDate: string) => {
           </div>
         </div>
       </main>
-       <Footer />
+       
     </div>
   );
 }

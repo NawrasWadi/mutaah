@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import Footer from "@/components/Footer";
 import UserDropdown from "@/components/UserDropdown";
 import { useQuery } from "@tanstack/react-query";
 import { subscriptionsService } from "@/services/subscriptions.service";
