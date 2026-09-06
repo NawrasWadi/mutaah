@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserProfile } from "@/context/UserProfileContext";
 import { authService } from "@/services/auth.service";
+import { useUserRole } from "@/hooks/useUserRole";
 import { tokenStorage } from "@/utils/tokenStorage";
 
 const menuItems = [
@@ -27,7 +28,8 @@ interface UserDropdownProps {
 export default function UserDropdown({ align = "right" }: UserDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { profile } = useUserProfile();
-const isAdmin = tokenStorage.getRole() === "admin";
+const role = useUserRole();
+const isAdmin = role === "admin";
 const router = useRouter();
 const queryClient = useQueryClient();
 
