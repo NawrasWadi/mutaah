@@ -1,3 +1,5 @@
+import { PaymentStatus } from "@/types/payment";
+
 export interface AdminDashboardStats {
   users_count: number;
   active_products_count: number;
@@ -8,16 +10,13 @@ export interface AdminDashboardStats {
   manual_identity_reviews_count: number;
 }
 
-// ✅ مصححة بالكامل حسب اختبار Postman فعلي (2026-08-28)
 export interface AdminDashboardSummary {
   stats: AdminDashboardStats;
-  recent_rental_requests: unknown[]; // شكل كامل تفصيلي، نبنيه لاحقاً عند الحاجة
+  recent_rental_requests: unknown[];
   pending_payments: AdminPayment[];
   identity_reviews: unknown[];
   pending_subscriptions: AdminSubscription[];
 }
-
-export type PaymentStatus = "pending" | "verified" | "failed" | "partially_refunded";
 
 export interface AdminPayment {
   id: string;
@@ -45,8 +44,6 @@ export interface AdminSubscription {
 
 export type AdminVerificationStatus = "manual_review" | "verified" | "approved" | "rejected";
 
-// ✅ مصححة بالكامل حسب اختبار Postman فعلي (2026-08-28) — الشكل الحقيقي
-// أغنى بكثير من الافتراض الأصلي، شامل بيانات المستخدم الكاملة متداخلة
 export interface AdminVerificationUser {
   id: string;
   full_name: string;
@@ -62,8 +59,8 @@ export interface AdminVerificationUser {
 export interface AdminVerification {
   id: string;
   user_id: string;
-  id_image_url: string;      // ⭐ كان id_image بالخطأ
-  selfie_image_url: string;  // ⭐ كان selfie_image بالخطأ
+  id_image_url: string;
+  selfie_image_url: string;
   status: AdminVerificationStatus;
   error_status: string | null;
   reviewed_by: string | null;
@@ -72,5 +69,5 @@ export interface AdminVerification {
   admin_note: string | null;
   created_at: string;
   updated_at: string;
-  user: AdminVerificationUser; // ⭐ حقل جديد بالكامل، مؤكد من الرد الفعلي
+  user: AdminVerificationUser;
 }
