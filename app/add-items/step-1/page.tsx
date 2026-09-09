@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAddProduct } from "@/context/AddProductContext";
 import { validateAddProductStep1, AddProductStep1Errors } from "@/validations/addProduct.validation";
 import { getCategoryLabel } from "@/utils/productCategory";
-import { PRODUCT_CATEGORIES } from "@/types/addProduct";
+import { PRODUCT_CATEGORIES } from "@/utils/productCategory";
 import UserDropdown from "@/components/UserDropdown";
 import { useUserProfile } from "@/context/UserProfileContext";
 import { useQuery } from "@tanstack/react-query";

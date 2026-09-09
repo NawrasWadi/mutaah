@@ -5,7 +5,7 @@ import SearchBar from "@/components/SearchBar";
 import Link from "next/link";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { PRODUCT_CATEGORIES } from "@/types/addProduct";
+import { PRODUCT_CATEGORIES } from "@/utils/productCategory";
 import { getCategoryLabel } from "@/utils/productCategory";
 import { useNotifications } from "@/context/NotificationsContext";
 import { productService } from "@/services/product.service";

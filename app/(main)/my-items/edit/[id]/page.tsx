@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import { productService } from "@/services/product.service";
 import { ProductDetails } from "@/types/product";
-import { PRODUCT_CATEGORIES } from "@/types/addProduct";
+import { PRODUCT_CATEGORIES } from "@/utils/productCategory";
 import { getCategoryLabel } from "@/utils/productCategory";
 import UserDropdown from "@/components/UserDropdown";
 import HourPeriodSelect from "@/components/HourPeriodSelect";
