@@ -1,4 +1,4 @@
-import { IdentityVerificationStatus } from "./verification";
+//import { IdentityVerificationStatus } from "./verification";
 
 export type ProductStatus = 'active' | 'frozen' | 'deleted' | 'pending';
 
@@ -40,7 +40,7 @@ export interface MyProduct extends BaseProduct {
   is_currently_rented?: boolean;
   primary_image?: string;
   description?: string;
-  location?: ProductLocation;
+  location: ProductLocation;
 }
 
 export interface RentedItem extends MyProduct {
@@ -77,12 +77,3 @@ export interface ProductDetails extends BaseProduct {
   is_available: boolean;
 }
 
-// ===== بيانات طلب الحجز (المستأجر) =====
-// ⚠️ مصححة لتطابق POST /rental-requests الفعلي: start_time/end_time
-// كاملين (تاريخ+وقت بصيغة واحدة)، وليس slots منفصلة لكل يوم —
-// مطابق لما بنيناه فعلياً بـ RentalBookingRequest بـ types/rental.ts
-export interface RentalBookingRequest {
-  product_id: string;
-  start_time: string; // "Y-m-d H:i:s"
-  end_time: string;
-}
