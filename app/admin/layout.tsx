@@ -1,25 +1,19 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUserProfile } from "@/context/UserProfileContext";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAdminAccess } from "@/context/AdminAccessContext";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { profile, isLoading } = useUserProfile();
-  const role = useUserRole(); // ✅ من tokenStorage (له من /login)، وليس من /profile
-                                 // لأن GET /profile لا يرجع role إطلاقاً (مؤكد من Postman)
+  const { isAdmin, isChecking } = useAdminAccess();
 
   useEffect(() => {
-    if (!isLoading && profile && role !== "admin") {
+    if (!isChecking && !isAdmin) {
       router.push("/dashboard");
     }
-    if (!isLoading && !profile) {
-      router.push("/login");
-    }
-  }, [isLoading, profile, role, router]);
+  }, [isChecking, isAdmin, router]);
 
-  if (isLoading || !profile || role !== "admin") {
+  if (isChecking || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
