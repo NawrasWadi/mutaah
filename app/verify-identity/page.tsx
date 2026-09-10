@@ -8,10 +8,17 @@ import { verificationService } from "@/services/verification.service";
 import { queryKeys } from "@/api/queryKeys";
 import { IdentityVerificationStatus } from "@/types/verification";
 
+function getSafeNextPath(raw: string | null): string {
+  if (!raw) return "/profile";
+  // لازم يبدأ بـ "/" لوحيدة، ومش "//" (protocol-relative بيعتبر خارجي)
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/profile";
+  return raw;
+} 
+
 export default function VerifyIdentityPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || "/profile";
+const nextPath = getSafeNextPath(searchParams.get("next"));
   const queryClient = useQueryClient();
 
   const [idImage, setIdImage] = useState<File | null>(null);
