@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserProfile } from "@/context/UserProfileContext";
 import { authService } from "@/services/auth.service";
-import { useUserRole } from "@/hooks/useUserRole";
 import { tokenStorage } from "@/utils/tokenStorage";
+import { useAdminAccess } from "@/context/AdminAccessContext";
 
 const menuItems = [
   { label: "حسابي", icon: "account_circle", href: "/profile" },
@@ -28,8 +28,7 @@ interface UserDropdownProps {
 export default function UserDropdown({ align = "right" }: UserDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { profile } = useUserProfile();
-const role = useUserRole();
-const isAdmin = role === "admin";
+const { isAdmin } = useAdminAccess();
 const router = useRouter();
 const queryClient = useQueryClient();
 
