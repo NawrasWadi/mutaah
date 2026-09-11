@@ -34,6 +34,8 @@ interface CreateProductPayload {
   images: File[];
   available_dates: string[];
   is_all_day: boolean;
+  start_time?: string;
+  end_time?: string;
 }
 
 export const productService = {

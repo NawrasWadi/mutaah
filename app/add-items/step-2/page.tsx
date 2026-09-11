@@ -55,9 +55,18 @@ export default function AddProductStep2Page() {
     );
   };
 
+  const selectedStartTime = isTimeComplete(sharedStart)
+    ? to24Hour(sharedStart.hour as number, sharedStart.period as "ص" | "م")
+    : null;
+  const selectedEndTime = isTimeComplete(sharedEnd)
+    ? to24Hour(sharedEnd.hour as number, sharedEnd.period as "ص" | "م")
+    : null;
+  const isTimeRangeValid =
+    isFullDayAvailability ||
+    (!!selectedStartTime && !!selectedEndTime && selectedEndTime > selectedStartTime);
   const isAvailabilityComplete =
     selectedDates.length > 0 &&
-    (isFullDayAvailability || (isTimeComplete(sharedStart) && isTimeComplete(sharedEnd)));
+    isTimeRangeValid;
 
   const handleBack = () => router.push("/add-items/step-1");
 
@@ -80,12 +89,8 @@ export default function AddProductStep2Page() {
         images: formData.product_images,
         available_dates: selectedDates,
         is_all_day: isFullDayAvailability,
-        ...(isFullDayAvailability
-          ? {}
-          : {
-              start_time: startTimeFormatted,
-              end_time: endTimeFormatted,
-            }),
+        start_time: isFullDayAvailability ? undefined : startTimeFormatted,
+        end_time: isFullDayAvailability ? undefined : endTimeFormatted,
       });
 
       resetFormData();
@@ -196,6 +201,11 @@ export default function AddProductStep2Page() {
 
                     <p className="text-xs text-gray-400 font-bold">إلى الساعة</p>
                     <HourPeriodSelect value={sharedEnd} onChange={setSharedEnd} allowedHours={ALL_HOURS} />
+                    {isTimeComplete(sharedStart) && isTimeComplete(sharedEnd) && !isTimeRangeValid && (
+                      <p className="text-xs font-bold text-red-500">
+                        يجب أن تكون ساعة النهاية بعد ساعة البداية
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

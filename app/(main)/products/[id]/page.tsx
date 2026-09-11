@@ -12,7 +12,7 @@ import { useUserProfile } from "@/context/UserProfileContext";
 import UserDropdown from "@/components/UserDropdown";
 import HourPeriodSelect from "@/components/HourPeriodSelect";
 import { MONTH_NAMES, DAY_LABELS } from "@/utils/calendar";
-import { TimeValue, isTimeComplete, to24Hour, from24Hour, getAllHours } from "@/utils/time";
+import { TimeValue, isTimeComplete, to24Hour, from24Hour } from "@/utils/time";
 import { getCategoryLabel } from "@/utils/productCategory";
 import RentalRequestModal from "@/components/RentalRequestModal";
 
@@ -34,7 +34,6 @@ export default function ProductDetailPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [isFullDayBooking, setIsFullDayBooking] = useState(false);
   const [startTime, setStartTime] = useState<TimeValue>({ hour: null, period: null });
   const [endTime, setEndTime] = useState<TimeValue>({ hour: null, period: null });
 
@@ -70,8 +69,8 @@ export default function ProductDetailPage() {
 
   // ✅ حساب نطاق الساعات المسموحة مع معالجة حماية القيم الفارغة
   const allowedHours = (() => {
-    if (!product || isAllDay) return getAllHours();
-    if (!product.start_time || !product.end_time) return getAllHours();
+    if (!product || isAllDay) return [];
+    if (!product.start_time || !product.end_time) return [];
 
     const result: { hour: number; period: "ص" | "م" }[] = [];
     const cleanStart = product.start_time.slice(0, 5);
@@ -83,8 +82,9 @@ export default function ProductDetailPage() {
         result.push(from24Hour(time24));
       }
     }
-    return result.length > 0 ? result : getAllHours();
+    return result;
   })();
+  const hasConfiguredHours = isAllDay || allowedHours.length > 0;
 
   const year = currentDate.getFullYear();
   const monthIndex = currentDate.getMonth();
@@ -104,14 +104,29 @@ export default function ProductDetailPage() {
   const selectDay = (isoDate: string) => {
     if (!availableDatesSet.has(isoDate)) return;
     setSelectedDate((prev) => (prev === isoDate ? null : isoDate));
-    setIsFullDayBooking(false);
     setStartTime({ hour: null, period: null });
     setEndTime({ hour: null, period: null });
   };
 
+  const selectedStart = isTimeComplete(startTime)
+    ? to24Hour(startTime.hour as number, startTime.period as "ص" | "م")
+    : null;
+  const selectedEnd = isTimeComplete(endTime)
+    ? to24Hour(endTime.hour as number, endTime.period as "ص" | "م")
+    : null;
+  const isTimeRangeValid =
+    isAllDay ||
+    (!!selectedStart &&
+      !!selectedEnd &&
+      !!product?.start_time &&
+      !!product?.end_time &&
+      selectedStart >= product.start_time.slice(0, 5) &&
+      selectedEnd <= product.end_time.slice(0, 5) &&
+      selectedEnd > selectedStart);
   const isBookingComplete =
     !!selectedDate &&
-    (isFullDayBooking || isAllDay || (isTimeComplete(startTime) && isTimeComplete(endTime)));
+    hasConfiguredHours &&
+    isTimeRangeValid;
 
   const handlePrevImage = () =>
     setActiveImage((prev) => (product ? (prev === 0 ? product.product_images.length - 1 : prev - 1) : 0));
@@ -126,7 +141,7 @@ export default function ProductDetailPage() {
       return;
     }
 
-    const fullDay = isFullDayBooking || isAllDay;
+    const fullDay = isAllDay;
     const start = fullDay ? "00:00:00" : to24Hour(startTime.hour as number, startTime.period as "ص" | "م") + ":00";
     const end = fullDay ? "23:59:59" : to24Hour(endTime.hour as number, endTime.period as "ص" | "م") + ":00";
 
@@ -340,29 +355,29 @@ export default function ProductDetailPage() {
                   <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-center">
                     <p className="text-xs font-bold text-primary">هذا المنتج متاح طوال اليوم (24 ساعة) لليوم المختار</p>
                   </div>
+                ) : !hasConfiguredHours ? (
+                  <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-center">
+                    <p className="text-xs font-bold text-red-600">لا توجد ساعات إتاحة محددة لهذا المنتج حالياً</p>
+                  </div>
                 ) : (
                   <>
-                    <label className="flex items-center gap-2 cursor-pointer bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                      <input
-                        type="checkbox"
-                        checked={isFullDayBooking}
-                        onChange={(e) => setIsFullDayBooking(e.target.checked)}
-                        className="w-4 h-4 accent-primary"
-                      />
-                      <span className="text-xs font-bold text-gray-700">حجز خلال جميع ساعات هذا اليوم (24 ساعة)</span>
-                    </label>
-
-                    {!isFullDayBooking && (
-                      <div className="space-y-3 pt-1">
-                        <div>
-                          <p className="text-xs text-gray-500 font-bold mb-1">ساعة البداية</p>
-                          <HourPeriodSelect value={startTime} onChange={setStartTime} allowedHours={allowedHours} />
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 font-bold mb-1">ساعة النهاية</p>
-                          <HourPeriodSelect value={endTime} onChange={setEndTime} allowedHours={allowedHours} />
-                        </div>
+                    <p className="text-xs text-primary bg-primary/5 border border-primary/20 rounded-xl p-3 font-bold">
+                      متاح من {product.start_time?.slice(0, 5)} إلى {product.end_time?.slice(0, 5)} فقط
+                    </p>
+                    <div className="space-y-3 pt-1">
+                      <div>
+                        <p className="text-xs text-gray-500 font-bold mb-1">ساعة البداية</p>
+                        <HourPeriodSelect value={startTime} onChange={setStartTime} allowedHours={allowedHours} />
                       </div>
+                      <div>
+                        <p className="text-xs text-gray-500 font-bold mb-1">ساعة النهاية</p>
+                        <HourPeriodSelect value={endTime} onChange={setEndTime} allowedHours={allowedHours} />
+                      </div>
+                    </div>
+                    {isTimeComplete(startTime) && isTimeComplete(endTime) && !isTimeRangeValid && (
+                      <p className="text-xs font-bold text-red-500">
+                        يجب أن يكون وقت النهاية بعد البداية وضمن ساعات إتاحة المالك
+                      </p>
                     )}
                   </>
                 )}
