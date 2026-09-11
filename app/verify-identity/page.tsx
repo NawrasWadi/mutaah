@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -15,7 +15,7 @@ function getSafeNextPath(raw: string | null): string {
   return raw;
 } 
 
-export default function VerifyIdentityPage() {
+function VerifyIdentityForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 const nextPath = getSafeNextPath(searchParams.get("next"));
@@ -228,5 +228,18 @@ const nextPath = getSafeNextPath(searchParams.get("next"));
         </div>
       </main>
     </div>
+  );
+}
+export default function VerifyIdentityPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      }
+    >
+      <VerifyIdentityForm />
+    </Suspense>
   );
 }
