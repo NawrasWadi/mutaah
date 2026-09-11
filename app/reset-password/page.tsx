@@ -1,13 +1,12 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { AxiosError } from "axios";
 import { authService } from "@/services/auth.service";
 import { ResetPasswordErrors } from "@/types/auth";
 
-export default function ResetPasswordPage() {
-  const router = useRouter();
+function ResetPasswordPageContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
   const email = searchParams.get("email") ?? "";
@@ -27,6 +26,7 @@ export default function ResetPasswordPage() {
     if (!password || password.length < 8) {
       newErrors.password = "كلمة السر يجب أن تكون 8 أحرف على الأقل";
     }
+
     if (passwordConfirmation !== password) {
       newErrors.password_confirmation = "كلمتا السر غير متطابقتين";
     }
@@ -155,5 +155,19 @@ export default function ResetPasswordPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-bg-page">
+          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <ResetPasswordPageContent />
+    </Suspense>
   );
 }
