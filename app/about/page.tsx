@@ -36,7 +36,7 @@ export default function AboutPage() {
             </h1>
             
             <p className="text-gray-500 leading-relaxed text-base md:text-base max-w-3xl mx-auto font-medium">
-              منصة <span className="text-primary font-bold">"مُتاح"</span> انطلقت من دافع المسؤولية المجتمعية اتجاه ندرة توفر الكثير من الأغراض والمعدات الأساسية في مجتمعنا. نحن نؤمن أن الحل يكمن في التكافل، ليكون هذا المشروع جسراً لتجاوز نقص الموارد عبر تشارك ما هو متاح بيننا.
+              منصة <span className="text-primary font-bold">&quot;مُتاح&quot;</span> انطلقت من دافع المسؤولية المجتمعية اتجاه ندرة توفر الكثير من الأغراض والمعدات الأساسية في مجتمعنا. نحن نؤمن أن الحل يكمن في التكافل، ليكون هذا المشروع جسراً لتجاوز نقص الموارد عبر تشارك ما هو متاح بيننا.
             </p>
           </div>
 

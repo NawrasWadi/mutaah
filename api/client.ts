@@ -25,7 +25,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       tokenStorage.clear();
       if (typeof window !== "undefined") {
-        window.location.href = "/login";
+        window.location.replace("/login");
       }
     }
     return Promise.reject(error);

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { AxiosError } from "axios";
 import { useQuery } from "@tanstack/react-query";
 import UserDropdown from "@/components/UserDropdown";
@@ -120,7 +121,7 @@ export default function SubscriptionCheckoutPage() {
             ) : (
               <div className="border border-gray-100 rounded-card p-3 flex items-center gap-3">
                 <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-gray-50">
-                  <img src={URL.createObjectURL(receiptFile)} alt="معاينة الإيصال" className="w-full h-full object-cover" />
+                  <Image src={URL.createObjectURL(receiptFile)} alt="معاينة الإيصال" width={56} height={56} unoptimized className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-gray-800 truncate">{receiptFile.name}</p>
