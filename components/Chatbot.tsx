@@ -12,7 +12,7 @@ export default function Chatbot() {
   const [showQuickBtns, setShowQuickBtns] = useState(true);
   const [input, setInp] = useState("");
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: "أهلاً! أنا مساعد متاح 👋<br/>كيف أقدر أساعدك اليوم؟", who: 'bot' }
+    { id: 1, text: "أهلاً! أنا مساعد متاح 👋\nكيف أقدر أساعدك اليوم؟", who: 'bot' }
   ]);
   
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -90,8 +90,10 @@ export default function Chatbot() {
                   ? 'bg-white border border-gray-100 rounded-2xl rounded-tr-none text-gray-700' 
                   : 'bg-primary text-white rounded-2xl rounded-tl-none self-end shadow-primary/10'
                 }`}
-                dangerouslySetInnerHTML={{ __html: m.text }}
-              />
+               style={{ whiteSpace: "pre-line" }}
+              >
+               {m.text}
+              </div>
             ))}
           </div>
 
