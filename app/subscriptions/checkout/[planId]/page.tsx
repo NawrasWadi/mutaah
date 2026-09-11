@@ -2,11 +2,13 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { AxiosError } from "axios";
 import { useQuery } from "@tanstack/react-query";
 import UserDropdown from "@/components/UserDropdown";
 import { subscriptionsService } from "@/services/subscriptions.service";
 import { queryKeys } from "@/api/queryKeys";
+import { getPlanDisplayInfo } from "@/utils/planDisplay";
 
 export default function SubscriptionCheckoutPage() {
   const params = useParams();
@@ -26,6 +28,9 @@ export default function SubscriptionCheckoutPage() {
   });
 
   const plan = plans?.find((p) => p.id === planId);
+  const planDisplayName = plan
+    ? getPlanDisplayInfo(plan.plan_type, plan).name
+    : "";
 
   const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -87,7 +92,7 @@ export default function SubscriptionCheckoutPage() {
           <div className="border border-gray-100 rounded-card p-4 mb-4">
             <div className="flex items-center justify-between mb-2 text-xs">
               <span className="text-gray-500">الخطة المختارة</span>
-              <span className="font-bold text-gray-800">{plan.name}</span>
+              <span className="font-bold text-gray-800">{planDisplayName}</span>
             </div>
             <div className="h-px bg-primary/20 my-2.5"></div>
             <div className="flex items-center justify-between">
@@ -114,7 +119,7 @@ export default function SubscriptionCheckoutPage() {
             ) : (
               <div className="border border-gray-100 rounded-card p-3 flex items-center gap-3">
                 <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-gray-50">
-                  <img src={URL.createObjectURL(receiptFile)} alt="معاينة الإيصال" className="w-full h-full object-cover" />
+                  <Image src={URL.createObjectURL(receiptFile)} alt="معاينة الإيصال" width={56} height={56} unoptimized className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-gray-800 truncate">{receiptFile.name}</p>
@@ -172,7 +177,7 @@ export default function SubscriptionCheckoutPage() {
 
                 <h2 className="text-lg font-black text-gray-800 mb-2">تم إرسال طلبك بنجاح!</h2>
                 <p className="text-xs text-gray-500 leading-relaxed mb-6">
-                  سيتم مراجعة الإيصال من قبل إدارة المنصة، وسيتم تفعيل خطة {plan.name} فور الموافقة على طلبك.
+                  سيتم مراجعة الإيصال من قبل إدارة المنصة، وسيتم تفعيل خطة {planDisplayName} فور الموافقة على طلبك.
                 </p>
 
                 <button
