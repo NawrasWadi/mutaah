@@ -65,6 +65,8 @@ export default function ProductDetailPage() {
   }, [productId]);
 
   const availableDatesSet = new Set(product?.available_dates ?? []);
+  const today = new Date();
+  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const isAllDay = !!product?.is_all_day;
 
   // ✅ حساب نطاق الساعات المسموحة مع معالجة حماية القيم الفارغة
@@ -102,6 +104,7 @@ export default function ProductDetailPage() {
   }
 
   const selectDay = (isoDate: string) => {
+    if (isoDate < todayIso) return;
     if (!availableDatesSet.has(isoDate)) return;
     setSelectedDate((prev) => (prev === isoDate ? null : isoDate));
     setStartTime({ hour: null, period: null });
@@ -321,17 +324,18 @@ export default function ProductDetailPage() {
                 {Array.from({ length: firstDayOffset }).map((_, i) => <div key={`empty-${i}`}></div>)}
                 {calendarCells.map(({ day, isoDate }) => {
                   const isAvailable = availableDatesSet.has(isoDate);
+                  const isPast = isoDate < todayIso;
                   const isSelected = selectedDate === isoDate;
 
                   let cellClass = "text-gray-300 cursor-not-allowed";
                   if (isSelected) cellClass = "bg-primary text-white font-bold shadow-md scale-105";
-                  else if (isAvailable) cellClass = "bg-primary-light text-gray-700 font-bold hover:bg-primary/20 cursor-pointer";
+                  else if (isAvailable && !isPast) cellClass = "bg-primary-light text-gray-700 font-bold hover:bg-primary/20 cursor-pointer";
 
                   return (
                     <button
                       key={isoDate}
                       type="button"
-                      disabled={!isAvailable}
+                      disabled={!isAvailable || isPast}
                       onClick={() => selectDay(isoDate)}
                       className={`aspect-square rounded-full text-xs transition-all ${cellClass}`}
                     >

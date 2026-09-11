@@ -33,6 +33,7 @@ export default function AddProductStep2Page() {
 
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
   const firstDayOffset = new Date(year, monthIndex, 1).getDay();
+  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   // ✅ التنقل بين الأشهر
   const handlePrevMonth = () => {
@@ -50,6 +51,7 @@ export default function AddProductStep2Page() {
   }
 
   const toggleSelectDay = (isoDate: string) => {
+    if (isoDate < todayIso) return;
     setSelectedDates((prev) =>
       prev.includes(isoDate) ? prev.filter((d) => d !== isoDate) : [...prev, isoDate]
     );
@@ -165,13 +167,19 @@ export default function AddProductStep2Page() {
                   {Array.from({ length: firstDayOffset }).map((_, i) => <div key={`empty-${i}`}></div>)}
                   {calendarCells.map(({ day, isoDate }) => {
                     const isSelected = selectedDates.includes(isoDate);
+                    const isPast = isoDate < todayIso;
                     return (
                       <button
                         key={isoDate}
                         type="button"
+                        disabled={isPast}
                         onClick={() => toggleSelectDay(isoDate)}
                         className={`aspect-square rounded-full text-xs font-bold transition-all ${
-                          isSelected ? "bg-primary text-white" : "bg-primary-light text-gray-700 hover:bg-primary/20"
+                          isPast
+                            ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                            : isSelected
+                              ? "bg-primary text-white"
+                              : "bg-primary-light text-gray-700 hover:bg-primary/20"
                         }`}
                       >
                         {day}
