@@ -151,8 +151,8 @@ export default function EditProductPage() {
         ...(isFullDayAvailability
   ? {}
   : {
-      start_time: to24Hour(sharedStart.hour as number, sharedStart.period as "ص" | "م") + ":00",
-      end_time: to24Hour(sharedEnd.hour as number, sharedEnd.period as "ص" | "م") + ":00",
+      start_time: to24Hour(sharedStart.hour as number, sharedStart.period as "ص" | "م"),
+      end_time: to24Hour(sharedEnd.hour as number, sharedEnd.period as "ص" | "م"),
     }),
     
       });
