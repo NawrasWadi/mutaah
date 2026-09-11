@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { UserProfileProvider } from "@/context/UserProfileContext";
 import { NotificationsProvider } from "@/context/NotificationsContext";
 import Providers from "./providers";
+import { AdminAccessProvider } from "@/context/AdminAccessContext";
 
 const cairo = Cairo({
   subsets: ["arabic"],
@@ -40,14 +41,16 @@ export default function RootLayout({
       <body className={`${cairo.variable} ${plusJakarta.variable} ${materialSymbols.variable} antialiased font-sans bg-slate-50 text-slate-900 flex flex-col min-h-screen`}>
        <Providers>
           <UserProfileProvider>
-            <NotificationsProvider>
-              <div className="flex-1 flex flex-col">
-                {children}
-              </div>
-              <Footer />
-              <ChatbotWrapper  />
-            </NotificationsProvider>
-          </UserProfileProvider>
+           <AdminAccessProvider>
+             <NotificationsProvider>
+               <div className="flex-1 flex flex-col">
+                 {children}
+               </div>
+               <Footer />
+               <ChatbotWrapper />
+             </NotificationsProvider>
+           </AdminAccessProvider>
+         </UserProfileProvider>
        </Providers>
       </body>
     </html>

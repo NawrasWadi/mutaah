@@ -84,16 +84,16 @@ export default function Chatbot() {
           >
             {messages.map((m) => (
               <div 
-                key={m.id}
-                className={`max-w-[85%] p-3 text-[12px] leading-relaxed shadow-sm ${
-                  m.who === 'bot' 
-                  ? 'bg-white border border-gray-100 rounded-2xl rounded-tr-none text-gray-700' 
-                  : 'bg-primary text-white rounded-2xl rounded-tl-none self-end shadow-primary/10'
-                }`}
-               style={{ whiteSpace: "pre-line" }}
-              >
-               {m.text}
-              </div>
+  key={m.id}
+  className={`max-w-[85%] p-3 text-[12px] leading-relaxed shadow-sm whitespace-pre-line ${
+    m.who === 'bot'
+    ? 'bg-white border border-gray-100 rounded-2xl rounded-tr-none text-gray-700'
+    : 'bg-primary text-white rounded-2xl rounded-tl-none self-end shadow-primary/10'
+  }`}
+>
+  {m.text}
+</div>
+
             ))}
           </div>
 
@@ -133,3 +133,6 @@ export default function Chatbot() {
     </div>
   );
 }
+// TODO: لما يترب الشات بوت بموديل AI، إذا احتجنا نعرض تنسيق (bold, روابط...)
+// من رد الموديل، لازم نستخدم DOMPurify.sanitize() مع allowlist ضيقة
+// قبل أي رجوع لـ dangerouslySetInnerHTML — ما نستخدمه بدون sanitization أبداً
