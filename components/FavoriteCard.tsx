@@ -15,8 +15,7 @@ export default function FavoriteCard({ item }: { item: PublicProduct  }) {
       </div>
       <div className="flex-1 min-w-0 text-right">
         <h3 className="font-bold text-gray-800 text-xs truncate">{item.title}</h3>
-          <p className="text-[10px] text-gray-400 mt-0.5">{item.governorate} — {item.district}</p>      
-            <div className="text-primary font-black text-[11px] mt-1">₪{item.price_per_hour}/ساعة</div>
+<p className="text-[10px] text-gray-400 mt-0.5">{item.location.governorate} — {item.location.district}</p>            <div className="text-primary font-black text-[11px] mt-1">₪{item.price_per_hour}/ساعة</div>
       </div>
       <div className="flex gap-1.5">
         <button
