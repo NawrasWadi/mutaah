@@ -71,9 +71,8 @@ export interface ProductDetails extends BaseProduct {
   location: ProductLocation; // ✅ مصححة
   owner: ProductOwnerSummary; // ✅ مصححة بالكامل (كان owner_full_name/owner_identity_status)
   available_dates: string[]; // ✅ مصححة: array من نصوص تواريخ بسيطة "Y-m-d"
-  start_time: string; // ✅ حقل واحد للمنتج كامل (H:i:s)
-  end_time: string;   // ✅ حقل واحد للمنتج كامل
+  start_time?: string; // حقل واحد للمنتج كامل (H:i:s)
+  end_time?: string;   // حقل واحد للمنتج كامل
   is_all_day: boolean; // ✅ حقل واحد للمنتج كامل
   is_available: boolean;
 }
-
