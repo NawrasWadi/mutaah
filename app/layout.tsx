@@ -4,7 +4,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import ChatbotWrapper from "@/components/ChatbotWrapper";
 import Footer from "@/components/Footer";
-import { ProductsProvider } from "@/context/ProductsContext";
 import { UserProfileProvider } from "@/context/UserProfileContext";
 import { NotificationsProvider } from "@/context/NotificationsContext";
 import Providers from "./providers";
@@ -40,7 +39,6 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${cairo.variable} ${plusJakarta.variable} ${materialSymbols.variable} antialiased font-sans bg-slate-50 text-slate-900 flex flex-col min-h-screen`}>
        <Providers>
-         <ProductsProvider>
           <UserProfileProvider>
             <NotificationsProvider>
               <div className="flex-1 flex flex-col">
@@ -50,7 +48,6 @@ export default function RootLayout({
               <ChatbotWrapper  />
             </NotificationsProvider>
           </UserProfileProvider>
-         </ProductsProvider>
        </Providers>
       </body>
     </html>
