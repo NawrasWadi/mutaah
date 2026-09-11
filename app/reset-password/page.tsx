@@ -1,13 +1,12 @@
 "use client";
 import { useState,Suspense  } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { AxiosError } from "axios";
 import { authService } from "@/services/auth.service";
 import { ResetPasswordErrors } from "@/types/auth";
 
 function ResetPasswordForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
   const email = searchParams.get("email") ?? "";

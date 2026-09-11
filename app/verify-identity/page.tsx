@@ -1,6 +1,7 @@
 "use client";
 import { useState, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import UserDropdown from "@/components/UserDropdown";
@@ -50,14 +51,6 @@ const nextPath = getSafeNextPath(searchParams.get("next"));
   const handleSubmit = () => {
     if (!idImage || !selfieImage) return;
     submitMutation.mutate();
-  };
-
-  // إعادة المحاولة بعد رفض — رفع الصورتين من جديد بالكامل
-  // (لا يوجد "سبب رفض" مصنّف لتحديد صورة واحدة بعينها، خلافاً للنظام القديم)
-  const handleRetry = () => {
-    setIdImage(null);
-    setSelfieImage(null);
-    queryClient.setQueryData(queryKeys.verification, null);
   };
 
   const status: IdentityVerificationStatus | null =
@@ -123,7 +116,7 @@ const nextPath = getSafeNextPath(searchParams.get("next"));
               <div className="grid grid-cols-2 gap-3">
                 <label className="border-2 border-dashed border-primary bg-primary-light rounded-section p-4 flex flex-col items-center gap-2 cursor-pointer">
                   {idImage ? (
-                    <img src={URL.createObjectURL(idImage)} alt="صورة الهوية" className="w-full h-16 object-cover rounded-lg" />
+                    <Image src={URL.createObjectURL(idImage)} alt="صورة الهوية" width={160} height={64} unoptimized className="w-full h-16 object-cover rounded-lg" />
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
                       <span className="material-symbols-rounded text-primary text-2xl">badge</span>
@@ -136,7 +129,7 @@ const nextPath = getSafeNextPath(searchParams.get("next"));
 
                 <label className="border-2 border-dashed border-gray-200 bg-gray-50 rounded-section p-4 flex flex-col items-center gap-2 cursor-pointer">
                   {selfieImage ? (
-                    <img src={URL.createObjectURL(selfieImage)} alt="صورة شخصية" className="w-full h-16 object-cover rounded-lg" />
+                    <Image src={URL.createObjectURL(selfieImage)} alt="صورة شخصية" width={160} height={64} unoptimized className="w-full h-16 object-cover rounded-lg" />
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
                       <span className="material-symbols-rounded text-gray-400 text-2xl">account_circle</span>
