@@ -7,6 +7,13 @@ import { useQuery } from "@tanstack/react-query";
 import UserDropdown from "@/components/UserDropdown";
 import { subscriptionsService } from "@/services/subscriptions.service";
 import { queryKeys } from "@/api/queryKeys";
+import { Plan } from "@/types/subscriptions";
+
+const planTypeLabels: Record<Plan["plan_type"], string> = {
+  standard: "الأساسية",
+  plus: "بلس",
+  pro: "المميزة",
+};
 
 export default function SubscriptionCheckoutPage() {
   const params = useParams();
@@ -87,8 +94,7 @@ export default function SubscriptionCheckoutPage() {
           <div className="border border-gray-100 rounded-card p-4 mb-4">
             <div className="flex items-center justify-between mb-2 text-xs">
               <span className="text-gray-500">الخطة المختارة</span>
-              <span className="font-bold text-gray-800">{plan.name}</span>
-            </div>
+<span className="font-bold text-gray-800">{planTypeLabels[plan.plan_type]}</span>            </div>
             <div className="h-px bg-primary/20 my-2.5"></div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold text-gray-800">المبلغ المطلوب</span>
@@ -172,8 +178,7 @@ export default function SubscriptionCheckoutPage() {
 
                 <h2 className="text-lg font-black text-gray-800 mb-2">تم إرسال طلبك بنجاح!</h2>
                 <p className="text-xs text-gray-500 leading-relaxed mb-6">
-                  سيتم مراجعة الإيصال من قبل إدارة المنصة، وسيتم تفعيل خطة {plan.name} فور الموافقة على طلبك.
-                </p>
+سيتم مراجعة الإيصال من قبل إدارة المنصة، وسيتم تفعيل خطة {planTypeLabels[plan.plan_type]} فور الموافقة على طلبك.                </p>
 
                 <button
                   type="button"
