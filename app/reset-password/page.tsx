@@ -1,12 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState,Suspense  } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AxiosError } from "axios";
 import { authService } from "@/services/auth.service";
 import { ResetPasswordErrors } from "@/types/auth";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
@@ -155,5 +155,18 @@ export default function ResetPasswordPage() {
         </Link>
       </div>
     </div>
+  );
+}
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-bg-page">
+          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
