@@ -77,6 +77,10 @@ getMyProducts: async (): Promise<MyProduct[]> => {
     });
 
     formData.append("is_all_day", payload.is_all_day ? "1" : "0");
+    if (!payload.is_all_day && payload.start_time && payload.end_time) {
+      formData.append("start_time", payload.start_time);
+      formData.append("end_time", payload.end_time);
+    }
 
     const res = await apiClient.post("/products", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -106,6 +110,10 @@ getMyProducts: async (): Promise<MyProduct[]> => {
     // ✅ مصححة: نفس إصلاح available_dates[]
     payload.available_dates?.forEach((date) => formData.append("available_dates[]", date));
     if (payload.is_all_day !== undefined) formData.append("is_all_day", payload.is_all_day ? "1" : "0");
+    if (!payload.is_all_day && payload.start_time && payload.end_time) {
+      formData.append("start_time", payload.start_time);
+      formData.append("end_time", payload.end_time);
+    }
 
     const res = await apiClient.post(`/products/${id}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
