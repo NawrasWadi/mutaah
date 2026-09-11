@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import { productService } from "@/services/product.service";
@@ -55,7 +56,7 @@ export default function ProductDetailPage() {
             setCurrentDate(new Date(firstDate.getFullYear(), firstDate.getMonth(), 1));
           }
         }
-      } catch (error) {
+      } catch {
         setLoadError("تعذّر تحميل بيانات المنتج");
       } finally {
         setIsLoading(false);
@@ -185,9 +186,12 @@ export default function ProductDetailPage() {
 
           <div>
             <div className="relative bg-white rounded-card border border-gray-100 h-72 flex items-center justify-center overflow-hidden mb-3">
-              <img
+              <Image
                 src={product.product_images[activeImage]}
                 alt={product.title}
+                width={640}
+                height={288}
+                unoptimized
                 className="w-full h-full object-contain p-2"
               />
 

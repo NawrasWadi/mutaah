@@ -1,17 +1,12 @@
 "use client";
 import { useState } from "react"; // موجودة أصلاً، تأكدي بس
-import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import UserDropdown from "@/components/UserDropdown";
-import { useProducts } from "@/context/ProductsContext";
+import Image from "next/image";
 
 export default function PaymentGatewayPage() {
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const params = useParams();
-const router = useRouter();
-const productId = params.id;
 const [paymentConfirmed, setPaymentConfirmed] = useState(false);
-const { markAsRented } = useProducts();
   const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -95,7 +90,7 @@ const { markAsRented } = useProducts();
             ) : (
               <div className="border border-gray-100 rounded-card p-3 flex items-center gap-3">
                 <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-gray-50">
-                  <img src={URL.createObjectURL(receiptFile)} alt="معاينة الإيصال" className="w-full h-full object-cover" />
+                  <Image src={URL.createObjectURL(receiptFile)} alt="معاينة الإيصال" width={56} height={56} unoptimized className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-gray-800 truncate">{receiptFile.name}</p>
@@ -127,7 +122,7 @@ const { markAsRented } = useProducts();
             disabled={!receiptFile}
             onClick={() => {
                   setPaymentConfirmed(true);
-                  markAsRented(productId as string);                   }}
+                }}
             className="w-full py-3.5 rounded-btn bg-linear-to-r from-primary to-green-harvest text-white font-bold text-sm shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
           <span className="material-symbols-rounded text-lg">send</span>

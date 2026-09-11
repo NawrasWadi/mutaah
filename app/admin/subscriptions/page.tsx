@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "@/services/admin.service";
 import { queryKeys } from "@/api/queryKeys";
@@ -54,9 +55,12 @@ export default function AdminSubscriptionsPage() {
             {subscriptions.map((sub) => (
               <div key={sub.id} className="bg-white border border-gray-100 rounded-xl p-4">
                 <div className="flex items-center gap-4">
-                  <img
+                  <Image
                     src={sub.receipt_image}
                     alt="إيصال الدفع"
+                    width={80}
+                    height={80}
+                    unoptimized
                     className="w-20 h-20 rounded-lg object-cover border border-gray-100 shrink-0"
                   />
                   <div className="flex-1 text-right">

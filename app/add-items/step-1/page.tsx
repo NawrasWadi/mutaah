@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAddProduct } from "@/context/AddProductContext";
 import { validateAddProductStep1, AddProductStep1Errors } from "@/validations/addProduct.validation";
@@ -120,9 +121,12 @@ const reachedListingLimit =
               <div className="grid grid-cols-4 gap-2">
                 {formData.product_images.map((file, i) => (
                   <div key={i} className="relative aspect-square rounded-xl border border-gray-100 overflow-hidden">
-                    <img
+                    <Image
                       src={URL.createObjectURL(file)}
                       alt="معاينة المنتج"
+                      width={200}
+                      height={200}
+                      unoptimized
                       className="w-full h-full object-cover"
                     />
                     <button

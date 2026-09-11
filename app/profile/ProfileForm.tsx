@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { locationData , governorateLabels } from "@/mock/locations";
 import { UserProfile, ProfileErrors } from "@/types/auth";
 import UserDropdown from "@/components/UserDropdown";
@@ -115,7 +116,7 @@ const handleUpdate = async (e: React.FormEvent) => {
               <div className="relative w-20 h-20 mx-auto mb-4 z-10">
                 <div className="w-full h-full rounded-full bg-white/20 border-2 border-white/50 shadow-inner overflow-hidden flex items-center justify-center backdrop-blur-md">
                   {avatarPreview ? (
-                    <img src={avatarPreview} alt="Profile" className="w-full h-full object-cover" />
+                    <Image src={avatarPreview} alt="Profile" width={80} height={80} unoptimized className="w-full h-full object-cover" />
                   ) : (
                     <span className="material-symbols-rounded text-5xl text-white">person</span>
                   )}

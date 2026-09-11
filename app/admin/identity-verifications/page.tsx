@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "@/services/admin.service";
 import { queryKeys } from "@/api/queryKeys";
@@ -55,8 +56,8 @@ export default function AdminVerificationsPage() {
               <div key={v.id} className="bg-white border border-gray-100 rounded-xl p-4">
                 <div className="flex items-center gap-4">
                   <div className="flex gap-2 shrink-0">
-                    <img src={`https://mutaah-api.apps.taqat.academy/storage/${v.id_image_url}`} alt="صورة الهوية" className="w-16 h-16 rounded-lg object-cover border border-gray-100" />
-<img src={`https://mutaah-api.apps.taqat.academy/storage/${v.selfie_image_url}`} alt="صورة شخصية" className="w-16 h-16 rounded-lg object-cover border border-gray-100" />
+                    <Image src={`https://mutaah-api.apps.taqat.academy/storage/${v.id_image_url}`} alt="صورة الهوية" width={64} height={64} unoptimized className="w-16 h-16 rounded-lg object-cover border border-gray-100" />
+                    <Image src={`https://mutaah-api.apps.taqat.academy/storage/${v.selfie_image_url}`} alt="صورة شخصية" width={64} height={64} unoptimized className="w-16 h-16 rounded-lg object-cover border border-gray-100" />
                   </div>
                   <div className="flex-1 text-right">
                     <p className="text-xs text-gray-500">مستخدم: <span className="font-bold text-gray-800">{v.user_id}</span></p>

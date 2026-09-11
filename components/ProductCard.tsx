@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { PublicProduct } from "@/types/product";
 import { useFavorites } from "@/context/FavoritesContext";
 
@@ -23,10 +24,13 @@ export default function ProductCard({
     >
       <div className="h-48 bg-primary-light flex items-center justify-center relative m-2 rounded-section overflow-hidden">
         {primary_image ? (
-          <img
+          <Image
             src={primary_image}
             alt={title}
-            className=" h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            width={400}
+            height={192}
+            unoptimized
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         ) : (
           <span className="material-symbols-rounded text-4xl text-gray-300 transition-transform duration-500 group-hover:scale-110">

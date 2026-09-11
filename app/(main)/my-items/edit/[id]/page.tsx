@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import { productService } from "@/services/product.service";
@@ -10,7 +11,7 @@ import { getCategoryLabel } from "@/utils/productCategory";
 import UserDropdown from "@/components/UserDropdown";
 import HourPeriodSelect from "@/components/HourPeriodSelect";
 import { MONTH_NAMES, DAY_LABELS } from "@/utils/calendar";
-import { TimeValue, isTimeComplete, to24Hour, from24Hour, getAllHours } from "@/utils/time";
+import { TimeValue, to24Hour, from24Hour, getAllHours } from "@/utils/time";
 
 type ImageSlot = string | File;
 const ALL_HOURS = getAllHours();
@@ -70,7 +71,7 @@ export default function EditProductPage() {
             setCurrentDate(new Date(firstDate.getFullYear(), firstDate.getMonth(), 1));
           }
         }
-      } catch (error) {
+      } catch {
         setLoadError("تعذّر تحميل بيانات المنتج");
       } finally {
         setIsLoading(false);
@@ -230,9 +231,12 @@ export default function EditProductPage() {
               <div className="grid grid-cols-4 gap-2">
                 {images.map((imgSlot, i) => (
                   <div key={i} className="relative aspect-square rounded-xl border border-gray-100 overflow-hidden bg-gray-50">
-                    <img
+                    <Image
                       src={typeof imgSlot === "string" ? imgSlot : URL.createObjectURL(imgSlot)}
                       alt="معاينة المنتج"
+                      width={200}
+                      height={200}
+                      unoptimized
                       className="w-full h-full object-cover"
                     />
                     <button
