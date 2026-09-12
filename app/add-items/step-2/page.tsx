@@ -79,8 +79,8 @@ export default function AddProductStep2Page() {
     setIsSubmitting(true);
     try {
       // ✅ ضبط التنسيق ليطابق متطلبات API بالكامل
-      const startTimeFormatted = to24Hour(sharedStart.hour as number, sharedStart.period as "ص" | "م") + ":00";
-      const endTimeFormatted = to24Hour(sharedEnd.hour as number, sharedEnd.period as "ص" | "م") + ":00";
+      const startTimeFormatted = to24Hour(sharedStart.hour as number, sharedStart.period as "ص" | "م");
+      const endTimeFormatted = to24Hour(sharedEnd.hour as number, sharedEnd.period as "ص" | "م");
 
       await productService.createProduct({
         title: formData.title,
