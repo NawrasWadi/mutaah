@@ -3,9 +3,10 @@ import { tokenStorage } from "@/utils/tokenStorage";
 
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
+   timeout: 15000,
   headers: {
     Accept: "application/json",
-     timeout: 15000,
+    
   },
 });
 
