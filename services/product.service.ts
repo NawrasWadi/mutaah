@@ -82,9 +82,7 @@ getMyProducts: async (): Promise<MyProduct[]> => {
       formData.append("end_time", payload.end_time);
     }
 
-    const res = await apiClient.post("/products", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const res = await apiClient.post("/products", formData);
     return res.data;
   },
 
@@ -115,9 +113,7 @@ getMyProducts: async (): Promise<MyProduct[]> => {
       formData.append("end_time", payload.end_time);
     }
 
-    const res = await apiClient.post(`/products/${id}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const res = await apiClient.post(`/products/${id}`, formData);
     return res.data;
   },
 };
