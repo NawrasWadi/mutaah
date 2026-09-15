@@ -38,6 +38,11 @@ export interface RentalProduct {
   owner: RentalProductOwner;
 }
 
+export interface RentalRequestRenter {
+  id: string;
+  full_name: string;
+}
+
 // الطلب كما يرجع فعلياً من POST /rental-requests و GET /rental-requests
 export interface RentalRequest {
   id: string;
@@ -49,4 +54,6 @@ export interface RentalRequest {
   created_at: string;
   updated_at?: string;
   product: RentalProduct; // ✅ متداخل بالكامل، مؤكد
+  renter: RentalRequestRenter;
+  total_price?: number;
 }
