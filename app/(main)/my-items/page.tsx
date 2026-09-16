@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { rentalService } from "@/services/rental.service";
 import { queryKeys } from "@/api/queryKeys";
 import { AxiosError } from "axios";
+import { useUserProfile } from "@/context/UserProfileContext";
 
 export default function ManageItemsPage() {
   const router = useRouter();
@@ -19,14 +20,19 @@ export default function ManageItemsPage() {
   const [myItems, setMyItems] = useState<MyProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [actionError, setActionError] = useState("");
+  const { profile } = useUserProfile();
 
   const { data: rentalRequests } = useQuery({
   queryKey: queryKeys.rentalRequests,
   queryFn: rentalService.getAllRelatedRequests,
 });
   
-  const pendingRequestsCount = 
-    rentalRequests?.filter((r: { owner_status?: string }) => r.owner_status === "pending").length ?? 0;
+  const incomingRequests = rentalRequests?.filter(
+    (request) => request.product.owner_id === profile?.id
+  ) ?? [];
+  const pendingRequestsCount = incomingRequests.filter(
+    (request) => request.owner_status === "pending"
+  ).length;
 
   const { favoriteProducts, clearFavorites } = useFavorites();
 

@@ -6,17 +6,24 @@ import UserDropdown from "@/components/UserDropdown";
 import Footer from "@/components/Footer";
 import { useState, useEffect } from "react";
 import { RentalRequest } from "@/types/rental";
+import { useUserProfile } from "@/context/UserProfileContext";
 
 export default function ManageRequestsPage() {
   const [requests, setRequests] = useState<RentalRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { profile } = useUserProfile();
 
   useEffect(() => {
     const loadRequests = async () => {
       setIsLoading(true);
       try {
         const data = await rentalService.getMyRequests();
-        setRequests(data.filter((r) => r.owner_status === "pending"));
+        const incomingRequests = data.filter(
+          (request) =>
+            request.product.owner_id === profile?.id &&
+            request.owner_status === "pending"
+        );
+        setRequests(incomingRequests);
       } catch (error) {
         console.error("Failed to fetch rental requests:", error);
       } finally {
@@ -24,7 +31,7 @@ export default function ManageRequestsPage() {
       }
     };
     loadRequests();
-  }, []);
+  }, [profile?.id]);
 
   const handleAccept = async (id: string) => {
     try {
